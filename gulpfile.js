@@ -7,6 +7,10 @@ gulp.task('js', function(){
     .pipe(gulp.dest('public'));
 });
 
+gulp.task('watch', function(){
+    gulp.watch('src/app.js', ['js']);
+});
+
 gulp.task('build', ['js'], function(){
     console.log('build command');
     return
