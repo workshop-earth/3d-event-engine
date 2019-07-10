@@ -24,6 +24,7 @@ gulp.task('css', function(){
 gulp.task('watch', function(){
     gulp.watch('src/js/app.js', ['js']);
     gulp.watch('src/scss/style.scss', ['css']);
+    gulp.watch('data/data.json', ['build']);
 });
 
 gulp.task('build', ['js', 'css'], function(){
