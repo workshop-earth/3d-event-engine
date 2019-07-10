@@ -49,18 +49,24 @@ function drawViz() {
 	d3.select(vizHolder).selectAll("*").remove();
 
 	//Draw it all
-	var n = d3.max(d3.values(data.dataset)) + 10;
+	var minLong = d3.min(data.dataset, function(d) { return + d.long;} );
+	var minLat = d3.min(data.dataset, function(d) { return + d.lat;} );
+	var minDepth = d3.min(data.dataset, function(d) { return + d.depth;} );
+	var maxLong = d3.max(data.dataset, function(d) { return + d.long;} );
+	var maxLat = d3.max(data.dataset, function(d) { return + d.lat;} );
+	var maxDepth = d3.max(data.dataset, function(d) { return + d.depth;} );
+	var buffer = 2;
 
 	var xScale = d3.scaleLinear()
-		.domain([0, n])
+		.domain([minLong - buffer, maxLong + buffer])
 		.range([0, width - (padding * 2)]);
 
 	var yScale = d3.scaleLinear()
-		.domain([0, n])
+		.domain([minLat - buffer, maxLat + buffer])
 		.range([height - (padding * 2), 0]);
 
 	var rScale = d3.scaleLinear()
-		.domain([0, n])
+		.domain([minDepth, maxDepth])
 		.range([5, 40]);
 
 	var svg = d3.select(vizHolder)
@@ -86,12 +92,12 @@ function drawViz() {
 		.enter()
 		.append("circle")
 		.attr('r', function(d, i){
-			return rScale(d)
+			return rScale(d.depth)
 		})
 		.attr('cx', function(d, i){
-			return xScale(d)
+			return xScale(d.long)
 		})
 		.attr('cy', function(d, i){
-			return yScale(d)
+			return yScale(d.lat)
 		});
 }
