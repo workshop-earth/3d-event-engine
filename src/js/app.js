@@ -48,14 +48,14 @@ function drawViz() {
 	width = vizHolder.offsetWidth;
 	d3.select(vizHolder).selectAll("*").remove();
 
-	//Draw it all
-	var minLong = d3.min(data.dataset, function(d) { return + d.long;} );
-	var minLat = d3.min(data.dataset, function(d) { return + d.lat;} );
-	var minDepth = d3.min(data.dataset, function(d) { return + d.depth;} );
-	var maxLong = d3.max(data.dataset, function(d) { return + d.long;} );
-	var maxLat = d3.max(data.dataset, function(d) { return + d.lat;} );
-	var maxDepth = d3.max(data.dataset, function(d) { return + d.depth;} );
-	var buffer = 2;
+	// Establish ranges/scales
+	var	minLong		= d3.min(data.dataset, function(d) { return + d.long;}),
+			minLat		= d3.min(data.dataset, function(d) { return + d.lat;}),
+			minDepth	= d3.min(data.dataset, function(d) { return + d.depth;}),
+			maxLong		= d3.max(data.dataset, function(d) { return + d.long;}),
+			maxLat		= d3.max(data.dataset, function(d) { return + d.lat;}),
+			maxDepth	= d3.max(data.dataset, function(d) { return + d.depth;}),
+			buffer		= 2;
 
 	var xScale = d3.scaleLinear()
 		.domain([minLong - buffer, maxLong + buffer])
@@ -69,6 +69,7 @@ function drawViz() {
 		.domain([minDepth, maxDepth])
 		.range([5, 40]);
 
+	//Draw it all
 	var svg = d3.select(vizHolder)
 				.append('svg')
 				.attr('height', height)
