@@ -1,5 +1,9 @@
 @import 'reset';
 
+*, *:before, *:after {
+	box-sizing: border-box;
+}
+
 h1 {
 	font-size: 3em;
 	margin: 0.4em 0;
@@ -8,7 +12,9 @@ h1 {
 
 
 .viz-holder {
-	width: 95%;
+	width: 95vw;
+	height: 50vh;
 	margin: auto;
-	border: 2px solid lightgray;
+	box-shadow: 0 0 15px rgba(0,0,0,0.15);
+	outline: 2px solid lightgray;
 }
