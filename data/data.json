@@ -1,29 +1,18 @@
 {
-	"dataset": [
+	"quakes": [
 		{
-			"lat": 100,
-			"long": 200,
-			"depth": 30
+			"lat": 100000,
+			"long": 999999,
+			"depth": 30,
+			"mag": 4.4,
+			"time": "time it started"
 		},
 		{
-			"lat": 110,
-			"long": 205,
-			"depth": 50
-		},
-		{
-			"lat": 120,
-			"long": 210,
-			"depth": 42
-		},
-		{
-			"lat": 95,
-			"long": 190,
-			"depth": 22
-		},
-		{
-			"lat": 100,
-			"long": 210,
-			"depth": 35
+			"lat": 100000,
+			"long": 999999,
+			"depth": 50,
+			"mag": 7.1,
+			"time": "time it started"
 		}
 	]
 }
