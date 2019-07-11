@@ -12,6 +12,7 @@ request.onload = function() {
 	if (request.status >= 200 && request.status < 400) {
 		console.log('Data received');
 		data = JSON.parse(request.responseText);
+		data = data.quakes;
 		init();
 	} else { console.log('Reached our target server, but it returned an error'); }
 };
@@ -49,12 +50,12 @@ function drawViz() {
 	d3.select(vizHolder).selectAll("*").remove();
 
 	// Establish ranges/scales
-	var	minLong		= d3.min(data.dataset, function(d) { return + d.long;}),
-			minLat		= d3.min(data.dataset, function(d) { return + d.lat;}),
-			minDepth	= d3.min(data.dataset, function(d) { return + d.depth;}),
-			maxLong		= d3.max(data.dataset, function(d) { return + d.long;}),
-			maxLat		= d3.max(data.dataset, function(d) { return + d.lat;}),
-			maxDepth	= d3.max(data.dataset, function(d) { return + d.depth;}),
+	var	minLong		= d3.min(data, function(d) { return + d.long;}),
+			minLat		= d3.min(data, function(d) { return + d.lat;}),
+			minDepth	= d3.min(data, function(d) { return + d.depth;}),
+			maxLong		= d3.max(data, function(d) { return + d.long;}),
+			maxLat		= d3.max(data, function(d) { return + d.lat;}),
+			maxDepth	= d3.max(data, function(d) { return + d.depth;}),
 			buffer		= 2;
 
 	var xScale = d3.scaleLinear()
@@ -89,7 +90,7 @@ function drawViz() {
 		.call(d3.axisLeft(yScale));
 
 	var circles = viz.selectAll("circle")
-		.data(data.dataset)
+		.data(data)
 		.enter()
 		.append("circle")
 		.attr('r', function(d, i){
