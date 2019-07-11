@@ -1,17 +1,24 @@
 {
 	"quakes": [
 		{
-			"lat": 100000,
-			"long": 999999,
-			"depth": 30,
+			"lat": 0,
+			"long": 10,
+			"depth": -10,
 			"mag": 4.4,
 			"time": "time it started"
 		},
 		{
-			"lat": 100000,
-			"long": 999999,
-			"depth": 50,
+			"lat": 5,
+			"long": 20,
+			"depth": -2,
 			"mag": 7.1,
+			"time": "time it started"
+		},
+		{
+			"lat": 20,
+			"long": 50,
+			"depth": -6,
+			"mag": 20,
 			"time": "time it started"
 		}
 	]
