@@ -42,9 +42,9 @@ function debounce(func, wait, immediate) {
 	};
 };
 
-var	origin					= [480, 300],
+var	origin					= [600, 50],
 		j								= 7,
-		scale						= 25,
+		scale						= 30,
 		scatter					= [],
 		yLine						= [],
 		xGrid						= [],
@@ -52,7 +52,10 @@ var	origin					= [480, 300],
 		alpha						= 0,
 		gridEdgeBuffer	= 25,
 		key							= function(d){ return d.id; },
-		startAngle			= Math.PI/7;
+		startAngle			= Math.PI/5,
+		startAngleY			= startAngle,
+		startAngleX			= -startAngle / 5;
+
 
 var svg = d3.select(vizHolder)
 				.append('svg')
@@ -69,8 +72,8 @@ var mx, my, mouseX, mouseY;
 var grid3d = d3._3d()
 		.shape('GRID', j*2)
 		.origin(origin)
-		.rotateY( startAngle)
-		.rotateX(-startAngle)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
 		.scale(scale);
 
 var point3d = d3._3d()
@@ -78,15 +81,15 @@ var point3d = d3._3d()
 		.y(function(d){ return d.y; })
 		.z(function(d){ return d.z; })
 		.origin(origin)
-		.rotateY( startAngle)
-		.rotateX(-startAngle)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
 		.scale(scale);
 
 var yScale3d = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY(startAngle)
-		.rotateX(-startAngle)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
 		.scale(scale);
 
 
@@ -109,10 +112,8 @@ function processData(data, tt){
 			.append('path')
 			.attr('class', '_3d grid')
 			.merge(xGrid)
-			.attr('stroke', 'gray')
-			.attr('stroke-width', 0.3)
-			.attr('fill', function(d){ return d.ccw ? 'whitesmoke' : '#717171'; })
-			.attr('fill-opacity', 0.9)
+			.attr('fill', function(d){ return d.ccw ? 'white' : '#ffffff'; })
+			.attr('fill-opacity', 0.4)
 			.attr('d', grid3d.draw);
 
 
@@ -146,8 +147,6 @@ function processData(data, tt){
 			.append('path')
 			.attr('class', '_3d yScale')
 			.merge(yScale)
-			.attr('stroke', 'black')
-			.attr('stroke-width', .5)
 			.attr('d', yScale3d.draw);
 
 	yScale.exit().remove();
@@ -158,7 +157,9 @@ function processData(data, tt){
 	yText.enter()
 			.append('text')
 			.attr('class', '_3d yText')
-			.attr('dx', '.3em')
+			.attr('dx', '-1em')
+			.attr('dy', '1em')
+			.attr('text-anchor', 'end')
 			.merge(yText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -170,7 +171,7 @@ function processData(data, tt){
 				return d.projected.y;
 			})
 			.text(function(d){
-				return d[1] <= 0 ? d[1] : '';
+				return d[1] >= 0 ? (d[1] - 1) : '';
 			});
 
 	yText.exit().remove();
@@ -225,10 +226,12 @@ function processData(data, tt){
 		}
 	}
 
-	d3.range(-1, 11, 1)
+	d3.range(1, 12, 1)
 		.forEach(function(d) {
-			yLine.push([-j, -d, -j]);
+			yLine.push([-j, d, -j]);
 		});
+
+		// debugger;
 
 	var data = [
 		grid3d(xGrid),
@@ -250,9 +253,9 @@ function dragged(){
 	beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
 	alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
 	var data = [
-		grid3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(xGrid),
-		point3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)(scatter),
-		yScale3d.rotateY(beta + startAngle).rotateX(alpha - startAngle)([yLine]),
+		grid3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)(xGrid),
+		point3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)(scatter),
+		yScale3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)([yLine]),
 	];
 	processData(data, 0);
 }
