@@ -24,7 +24,7 @@
 		{
 			"lat": 100,
 			"long": 5,
-			"depth": 7,
+			"depth": 100,
 			"mag": 6,
 			"time": "time it started"
 		},
@@ -38,7 +38,7 @@
 		{
 			"lat": 74,
 			"long": 111,
-			"depth": 5,
+			"depth": 500,
 			"mag": 8,
 			"time": "time it started"
 		},

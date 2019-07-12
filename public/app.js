@@ -102,7 +102,8 @@ var	minLong,
 		cnt;
 
 var xScale,
-		zScale;
+		zScale,
+		depthScale;
 
 function processData(data, tt){
 	/* ----------- GRID ----------- */
@@ -210,6 +211,17 @@ function processData(data, tt){
 		.range([-j, j - 1]);
 
 
+
+	var yScaleMin = 1;
+	var yScaleMax = 12;
+	var yScaleBuffer = 1;
+	//Build scale for depth
+		//yScale ticks/steps need to be informed by dataset
+			//Right now arbitrary 0-10
+	depthScale = d3.scaleLinear()
+		.domain([minDepth, maxDepth])
+		.range([yScaleMin + (yScaleBuffer * 2), yScaleMax - yScaleBuffer]);
+
 	xGrid = [], scatter = [], yLine = [];
 	for(var z = -j; z < j; z++){
 		for(var x = -j; x < j; x++){
@@ -217,7 +229,7 @@ function processData(data, tt){
 			while (cnt < quakeData.length) {
 				scatter.push({
 					x:		xScale(quakeData[cnt].long),
-					y:		quakeData[cnt].depth,
+					y:		depthScale(quakeData[cnt].depth),
 					z:		zScale(quakeData[cnt].lat),
 					mag:	quakeData[cnt].mag,
 					id:		'point_' + cnt++
@@ -226,12 +238,10 @@ function processData(data, tt){
 		}
 	}
 
-	d3.range(1, 12, 1)
+	d3.range(yScaleMin, yScaleMax, 1)
 		.forEach(function(d) {
 			yLine.push([-j, d, -j]);
 		});
-
-		// debugger;
 
 	var data = [
 		grid3d(xGrid),
