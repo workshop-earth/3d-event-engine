@@ -23,9 +23,13 @@ circle {
 }
 
 path, line {
-	// stroke: teal;
+	stroke: black;
+	stroke-opacity: 0.2;
+	stroke-width: 0.4;
 }
 
 text {
-	// fill: teal;
+	fill: black;
+	fill-opacity: 0.4;
+	font-family: 'Helvetica Nueue',  Helvetica, Arial, sans-serif;
 }
