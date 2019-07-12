@@ -48,6 +48,41 @@
 			"depth": -4,
 			"mag": 9,
 			"time": "time it started"
+		},
+		{
+			"lat": 81,
+			"long": 75,
+			"depth": -4,
+			"mag": 9,
+			"time": "time it started"
+		},
+		{
+			"lat": 98,
+			"long": 80,
+			"depth": -4,
+			"mag": 9,
+			"time": "time it started"
+		},
+		{
+			"lat": 79,
+			"long": 200,
+			"depth": -4,
+			"mag": 9,
+			"time": "time it started"
+		},
+		{
+			"lat": 94,
+			"long": 182,
+			"depth": -4,
+			"mag": 9,
+			"time": "time it started"
+		},
+		{
+			"lat": 19,
+			"long": 32,
+			"depth": -4,
+			"mag": 9,
+			"time": "time it started"
 		}
 	]
 }
