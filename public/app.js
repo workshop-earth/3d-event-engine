@@ -43,7 +43,7 @@ function debounce(func, wait, immediate) {
 };
 
 var	origin			= [480, 300],
-		j						= 5,
+		j						= 7,
 		scale				= 25,
 		scatter			= [],
 		yLine				= [],
@@ -84,10 +84,21 @@ var point3d = d3._3d()
 var yScale3d = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY( startAngle)
+		.rotateY(startAngle)
 		.rotateX(-startAngle)
 		.scale(scale);
 
+
+var	minLong,
+		minLat,
+		minDepth,
+		maxLong,
+		maxLat,
+		maxDepth,
+		cnt;
+
+var xScale,
+		zScale;
 
 function processData(data, tt){
 	/* ----------- GRID ----------- */
@@ -102,6 +113,7 @@ function processData(data, tt){
 			.attr('fill', function(d){ return d.ccw ? 'whitesmoke' : '#717171'; })
 			.attr('fill-opacity', 0.9)
 			.attr('d', grid3d.draw);
+
 
 	xGrid.exit().remove();
 
@@ -121,6 +133,8 @@ function processData(data, tt){
 			.attr('opacity', 0.3)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
+
+	// debugger;
 
 	points.exit().remove();
 
@@ -177,13 +191,22 @@ function processData(data, tt){
 
 	function init(){
 
-	var	minLong		= d3.min(quakeData, function(d) { return + d.long;}),
-			minLat		= d3.min(quakeData, function(d) { return + d.lat;}),
-			minDepth	= d3.min(quakeData, function(d) { return + d.depth;}),
-			maxLong		= d3.max(quakeData, function(d) { return + d.long;}),
-			maxLat		= d3.max(quakeData, function(d) { return + d.lat;}),
-			maxDepth	= d3.max(quakeData, function(d) { return + d.depth;}),
-			cnt = 0;
+	minLong		= d3.min(quakeData, function(d) { return + d.long;});
+	minLat		= d3.min(quakeData, function(d) { return + d.lat;});
+	minDepth	= d3.min(quakeData, function(d) { return + d.depth;});
+	maxLong		= d3.max(quakeData, function(d) { return + d.long;});
+	maxLat		= d3.max(quakeData, function(d) { return + d.lat;});
+	maxDepth	= d3.max(quakeData, function(d) { return + d.depth;});
+	cnt = 0;
+
+	xScale = d3.scaleLinear()
+		.domain([minLong, maxLong])
+		.range([-j, j - 1]);
+
+	zScale = d3.scaleLinear()
+		.domain([minLat, maxLat])
+		.range([-j, j - 1]);
+
 
 	xGrid = [], scatter = [], yLine = [];
 	for(var z = -j; z < j; z++){
@@ -191,9 +214,9 @@ function processData(data, tt){
 			xGrid.push([x, 1, z]);
 			while (cnt < quakeData.length) {
 				scatter.push({
-					x:		quakeData[cnt].long,
+					x:		xScale(quakeData[cnt].long),
 					y:		quakeData[cnt].depth,
-					z:		quakeData[cnt].lat,
+					z:		zScale(quakeData[cnt].lat),
 					mag:	quakeData[cnt].mag,
 					id:		'point_' + cnt++
 				});
@@ -201,7 +224,10 @@ function processData(data, tt){
 		}
 	}
 
-	d3.range(-1, 11, 1).forEach(function(d){ yLine.push([-j, -d, -j]); });
+	d3.range(-1, 11, 1)
+		.forEach(function(d) {
+			yLine.push([-j, -d, -j]);
+		});
 
 	var data = [
 		grid3d(xGrid),
