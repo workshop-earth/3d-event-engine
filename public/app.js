@@ -42,16 +42,17 @@ function debounce(func, wait, immediate) {
 	};
 };
 
-var	origin			= [480, 300],
-		j						= 7,
-		scale				= 25,
-		scatter			= [],
-		yLine				= [],
-		xGrid				= [],
-		beta				= 0,
-		alpha				= 0,
-		key					= function(d){ return d.id; },
-		startAngle	= Math.PI/7;
+var	origin					= [480, 300],
+		j								= 7,
+		scale						= 25,
+		scatter					= [],
+		yLine						= [],
+		xGrid						= [],
+		beta						= 0,
+		alpha						= 0,
+		gridEdgeBuffer	= 25,
+		key							= function(d){ return d.id; },
+		startAngle			= Math.PI/7;
 
 var svg = d3.select(vizHolder)
 				.append('svg')
@@ -200,11 +201,11 @@ function processData(data, tt){
 	cnt = 0;
 
 	xScale = d3.scaleLinear()
-		.domain([minLong, maxLong])
+		.domain([minLong - gridEdgeBuffer, maxLong + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	zScale = d3.scaleLinear()
-		.domain([minLat, maxLat])
+		.domain([minLat - gridEdgeBuffer, maxLat + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 
