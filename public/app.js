@@ -1,16 +1,46 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var	vizHolder = document.querySelector('#vizHolder'),
-		request = new XMLHttpRequest(),
-		datapath = '../data/data.json',
-		padding = 40,
-		height,
-		width,
-		quakeData;
+var
+vizHolder 		= document.querySelector('#vizHolder'),
+request 		= new XMLHttpRequest(),
+datapath 		= '../data/data.json',
+height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
+width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+origin			= [width/2, 100],
+j				= 7,
+scale			= 40,
+scatter			= [],
+yLine			= [],
+xGrid			= [],
+beta			= 0,
+alpha			= 0,
+gridEdgeBuffer	= 25,
+key				= function(d){ return d.id; },
+startAngle		= Math.PI/5,
+startAngleY		= startAngle,
+startAngleX		= -startAngle / 5.;
 
 
-height = vizHolder.offsetHeight;
-width = vizHolder.offsetWidth;
+var
+
+quakeData,
+mx,
+my,
+mouseX,
+mouseY,
+minLong,
+minLat,
+minDepth,
+maxLong,
+maxLat,
+maxDepth,
+cnt,
+xScale,
+zScale,
+depthScale;
+
+// height = vizHolder.offsetHeight;
+// width = vizHolder.offsetWidth;
 
 
 //Data fetch
@@ -18,8 +48,7 @@ request.open('GET', datapath, true);
 request.onload = function() {
 	if (request.status >= 200 && request.status < 400) {
 		console.log('Data received');
-		quakeData = JSON.parse(request.responseText);
-		quakeData = quakeData.quakes;
+		quakeData = JSON.parse(request.responseText).quakes;
 		init();
 	} else { console.log('Reached our target server, but it returned an error'); }
 };
@@ -42,20 +71,6 @@ function debounce(func, wait, immediate) {
 	};
 };
 
-var	origin					= [600, 50],
-		j								= 7,
-		scale						= 30,
-		scatter					= [],
-		yLine						= [],
-		xGrid						= [],
-		beta						= 0,
-		alpha						= 0,
-		gridEdgeBuffer	= 25,
-		key							= function(d){ return d.id; },
-		startAngle			= Math.PI/5,
-		startAngleY			= startAngle,
-		startAngleX			= -startAngle / 5;
-
 
 var svg = d3.select(vizHolder)
 				.append('svg')
@@ -64,10 +79,8 @@ var svg = d3.select(vizHolder)
 				.call(d3.drag().on('drag', dragged).on('start', dragStart).on('end', dragEnd))
 
 var viz = svg.append('g')
-				.attr('id', 'viz')
-				.attr('transform', 'translate(' + padding + ', ' + padding + ')');
+				.attr('id', 'viz');
 
-var mx, my, mouseX, mouseY;
 
 var grid3d = d3._3d()
 		.shape('GRID', j*2)
@@ -92,20 +105,7 @@ var yScale3d = d3._3d()
 		.rotateX( startAngleX)
 		.scale(scale);
 
-
-var	minLong,
-		minLat,
-		minDepth,
-		maxLong,
-		maxLat,
-		maxDepth,
-		cnt;
-
-var xScale,
-		zScale,
-		depthScale;
-
-function processData(data, tt){
+function processData(data, tt) {
 	/* ----------- GRID ----------- */
 	var xGrid = viz.selectAll('path.grid').data(data[0], key);
 
@@ -180,19 +180,19 @@ function processData(data, tt){
 	d3.selectAll('._3d').sort(d3._3d().sort);
 }
 
-	function posPointX(d){
-		return d.projected.x;
-	}
+function posPointX(d){
+	return d.projected.x;
+}
 
-	function posPointY(d){
-		return d.projected.y;
-	}
+function posPointY(d){
+	return d.projected.y;
+}
 
-	function magPoint(d){
-		return d.mag;
-	}
+function magPoint(d){
+	return d.mag;
+}
 
-	function init(){
+function init(){
 
 	minLong		= d3.min(quakeData, function(d) { return + d.long;});
 	minLat		= d3.min(quakeData, function(d) { return + d.lat;});
@@ -209,8 +209,6 @@ function processData(data, tt){
 	zScale = d3.scaleLinear()
 		.domain([minLat - gridEdgeBuffer, maxLat + gridEdgeBuffer])
 		.range([-j, j - 1]);
-
-
 
 	var yScaleMin = 1;
 	var yScaleMax = 12;

@@ -38,28 +38,28 @@
 		{
 			"lat": 74,
 			"long": 111,
-			"depth": 500,
+			"depth": 90,
 			"mag": 8,
 			"time": "time it started"
 		},
 		{
 			"lat": 100,
 			"long": 100,
-			"depth": 4,
+			"depth": 40,
 			"mag": 9,
 			"time": "time it started"
 		},
 		{
 			"lat": 81,
 			"long": 75,
-			"depth": 4,
+			"depth": 30,
 			"mag": 9,
 			"time": "time it started"
 		},
 		{
 			"lat": 98,
 			"long": 80,
-			"depth": 4,
+			"depth": 22,
 			"mag": 9,
 			"time": "time it started"
 		},
