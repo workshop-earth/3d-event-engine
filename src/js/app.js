@@ -22,7 +22,6 @@ startAngleX		= -startAngle / 5.;
 
 
 var
-
 quakeData,
 mx,
 my,
@@ -38,9 +37,6 @@ cnt,
 xScale,
 zScale,
 depthScale;
-
-// height = vizHolder.offsetHeight;
-// width = vizHolder.offsetWidth;
 
 
 //Data fetch
@@ -172,7 +168,7 @@ function processData(data, tt) {
 				return d.projected.y;
 			})
 			.text(function(d){
-				return d[1] >= 0 ? (d[1] - 1) : '';
+				return d[1] >= 0 ? Math.round(depthScale.invert((d[1] - 1)) * 10) / 10 : '';
 			});
 
 	yText.exit().remove();
