@@ -168,7 +168,7 @@ function processData(data, tt) {
 				return d.projected.y;
 			})
 			.text(function(d){
-				return d[1] >= 0 ? Math.round(depthScale.invert((d[1] - 1)) * 10) / 10 : '';
+				return d[1] >= 2 ? Math.round(depthScale.invert(d[1]) * 1) / 1 : '';
 			});
 
 	yText.exit().remove();
@@ -214,7 +214,7 @@ function init(){
 			//Right now arbitrary 0-10
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
-		.range([yScaleMin + (yScaleBuffer * 2), yScaleMax - yScaleBuffer]);
+		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
 
 	xGrid = [], scatter = [], yLine = [];
 	for(var z = -j; z < j; z++){
@@ -236,6 +236,7 @@ function init(){
 		.forEach(function(d) {
 			yLine.push([-j, d, -j]);
 		});
+
 
 	var data = [
 		grid3d(xGrid),
