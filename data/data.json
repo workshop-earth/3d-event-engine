@@ -59,14 +59,14 @@
 		{
 			"lat": 98,
 			"long": 80,
-			"depth": 22,
+			"depth": 220,
 			"mag": 9,
 			"time": "time it started"
 		},
 		{
 			"lat": 79,
 			"long": 200,
-			"depth": 1,
+			"depth": 25,
 			"mag": 9,
 			"time": "time it started"
 		},
