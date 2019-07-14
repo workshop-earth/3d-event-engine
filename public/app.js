@@ -18,7 +18,7 @@ gridEdgeBuffer	= 25,
 key				= function(d){ return d.id; },
 startAngle		= Math.PI/5,
 startAngleY		= startAngle,
-startAngleX		= -startAngle / 5.;
+startAngleX		= -startAngle / 5;
 
 
 var
@@ -258,9 +258,9 @@ function dragged(){
 	beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
 	alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
 	var data = [
-		grid3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)(xGrid),
-		point3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)(scatter),
-		yScale3d.rotateY(beta + startAngleY).rotateX(alpha - startAngleX)([yLine]),
+		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
+		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
+		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
 	];
 	processData(data, 0);
 }
