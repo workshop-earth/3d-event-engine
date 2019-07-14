@@ -121,7 +121,7 @@ function processData(data, tt) {
 
 	points.enter()
 			.append('circle')
-			.attr('class', '_3d foobar')
+			.attr('class', '_3d')
 			.attr('opacity', 0)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
@@ -210,8 +210,6 @@ function init(){
 	var yScaleMax = 12;
 	var yScaleBuffer = 1;
 	//Build scale for depth
-		//yScale ticks/steps need to be informed by dataset
-			//Right now arbitrary 0-10
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
