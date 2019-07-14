@@ -36,7 +36,8 @@ maxDepth,
 cnt,
 xScale,
 zScale,
-depthScale;
+depthScale,
+colorScale;
 
 
 //Data fetch
@@ -128,7 +129,11 @@ function processData(data, tt) {
 			.merge(points)
 			.transition().duration(tt)
 			.attr('r', magPoint)
-			.attr('fill', 'blue')
+			.attr('fill', function(d){
+				//Color scale WIP
+				console.log(colorScale(d.projected.y));
+				return colorScale(d.projected.y);
+			})
 			.attr('opacity', 0.3)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
@@ -213,6 +218,9 @@ function init(){
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
+
+	//Trying to work out color scale coupled with depth scale
+	colorScale = d3.scaleOrdinal(d3.schemeAccent);
 
 	xGrid = [], scatter = [], yLine = [];
 	for(var z = -j; z < j; z++){
