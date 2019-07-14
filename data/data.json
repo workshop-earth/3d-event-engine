@@ -3,35 +3,35 @@
 		{
 			"lat": 10,
 			"long": 10,
-			"depth": 10,
+			"depth": 50,
 			"mag": 3,
 			"time": "time it started"
 		},
 		{
 			"lat": 50,
 			"long": 20,
-			"depth": 9,
+			"depth": 90,
 			"mag": 4,
 			"time": "time it started"
 		},
 		{
 			"lat": 32,
 			"long": 55,
-			"depth": 8,
+			"depth": 80,
 			"mag": 5,
 			"time": "time it started"
 		},
 		{
 			"lat": 100,
 			"long": 5,
-			"depth": 1000,
+			"depth": 300,
 			"mag": 6,
 			"time": "time it started"
 		},
 		{
 			"lat": 80,
 			"long": 66,
-			"depth": 6,
+			"depth": 60,
 			"mag": 7,
 			"time": "time it started"
 		},
@@ -73,14 +73,14 @@
 		{
 			"lat": 94,
 			"long": 182,
-			"depth": 4,
+			"depth": 40,
 			"mag": 9,
 			"time": "time it started"
 		},
 		{
 			"lat": 19,
 			"long": 32,
-			"depth": 4,
+			"depth": 77,
 			"mag": 9,
 			"time": "time it started"
 		}
