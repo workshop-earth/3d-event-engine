@@ -37,7 +37,8 @@ cnt,
 xScale,
 zScale,
 depthScale,
-colorScale;
+colorScale,
+magScale;
 
 
 //Data fetch
@@ -188,7 +189,7 @@ function posPointY(d){
 }
 
 function magPoint(d){
-	return d.mag;
+	return magScale(d.mag);
 }
 
 function init(){
@@ -210,6 +211,10 @@ function init(){
 	zScale = d3.scaleLinear()
 		.domain([minLat - gridEdgeBuffer, maxLat + gridEdgeBuffer])
 		.range([-j, j - 1]);
+
+	magScale = d3.scaleLinear()
+		.domain([0, 10])
+		.range([5, 40]);
 
 	var yScaleMin = 1;
 	var yScaleMax = 12;
