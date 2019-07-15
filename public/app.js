@@ -7,8 +7,8 @@ datapath 		= '../data/data.json',
 height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
 width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
 origin			= [width/2, 100],
-j				= 7,
-scale			= 40,
+j						= 6,
+scale				= 40,
 scatter			= [],
 yLine			= [],
 xGrid			= [],
@@ -141,8 +141,6 @@ function processData(data, tt) {
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
 
-	// debugger;
-
 	points.exit().remove();
 
 	/* ----------- y-Scale ----------- */
@@ -221,13 +219,12 @@ function init(){
 		.range([5, 40]);
 
 	var yScaleMin = 1;
-	var yScaleMax = 12;
+	var yScaleMax = j * 2; // Match depth (Y) units to ~X/Z units
 	var yScaleBuffer = 1;
 	//Build scale for depth
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
-
 
 	colorScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
