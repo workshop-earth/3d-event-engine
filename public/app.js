@@ -18,7 +18,8 @@ gridEdgeBuffer	= 25,
 key				= function(d){ return d.id; },
 startAngle		= Math.PI/5,
 startAngleY		= startAngle,
-startAngleX		= -startAngle / 5;
+startAngleX		= -startAngle / 5,
+rotateCenter = [0,6,0];
 
 
 var
@@ -85,7 +86,8 @@ var grid3d = d3._3d()
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale);
+		.scale(scale)
+		.rotateCenter(rotateCenter);
 
 var point3d = d3._3d()
 		.x(function(d){ return d.x; })
@@ -94,14 +96,16 @@ var point3d = d3._3d()
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale);
+		.scale(scale)
+		.rotateCenter(rotateCenter);
 
 var yScale3d = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale);
+		.scale(scale)
+		.rotateCenter(rotateCenter);
 
 function processData(data, tt) {
 	/* ----------- GRID ----------- */
