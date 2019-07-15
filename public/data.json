@@ -1,0 +1,88 @@
+{
+	"quakes": [
+		{
+			"lat": 10,
+			"long": 10,
+			"depth": 50,
+			"mag": 8,
+			"time": "time it started"
+		},
+		{
+			"lat": 50,
+			"long": 20,
+			"depth": 90,
+			"mag": 1,
+			"time": "time it started"
+		},
+		{
+			"lat": 32,
+			"long": 55,
+			"depth": 80,
+			"mag": 2.2,
+			"time": "time it started"
+		},
+		{
+			"lat": 100,
+			"long": 5,
+			"depth": 300,
+			"mag": 3.4,
+			"time": "time it started"
+		},
+		{
+			"lat": 80,
+			"long": 66,
+			"depth": 60,
+			"mag": 3,
+			"time": "time it started"
+		},
+		{
+			"lat": 74,
+			"long": 111,
+			"depth": 90,
+			"mag": 1.4,
+			"time": "time it started"
+		},
+		{
+			"lat": 100,
+			"long": 100,
+			"depth": 40,
+			"mag": 5.5,
+			"time": "time it started"
+		},
+		{
+			"lat": 81,
+			"long": 75,
+			"depth": 30,
+			"mag": 1.3,
+			"time": "time it started"
+		},
+		{
+			"lat": 98,
+			"long": 80,
+			"depth": 220,
+			"mag": 2.1,
+			"time": "time it started"
+		},
+		{
+			"lat": 79,
+			"long": 200,
+			"depth": 500,
+			"mag": 2,
+			"time": "time it started"
+		},
+		{
+			"lat": 94,
+			"long": 182,
+			"depth": 40,
+			"mag": 1.7,
+			"time": "time it started"
+		},
+		{
+			"lat": 19,
+			"long": 32,
+			"depth": 77,
+			"mag": 6.2,
+			"time": "time it started"
+		}
+	]
+}

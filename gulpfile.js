@@ -27,7 +27,12 @@ gulp.task('watch', function(){
     gulp.watch('data/data.json', ['build']);
 });
 
-gulp.task('build', ['js', 'css'], function(){
+gulp.task('data', function(){
+    return gulp.src('data/data.json')
+        .pipe(gulp.dest('public'));
+});
+
+gulp.task('build', ['js', 'css', 'data'], function(){
     console.log('Building site...');
     return
 });
