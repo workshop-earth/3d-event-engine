@@ -130,11 +130,9 @@ function processData(data, tt) {
 			.transition().duration(tt)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
-				//Color scale WIP
-				console.log(colorScale(d.projected.y));
-				return colorScale(d.projected.y);
+				return colorScale(depthScale.invert(d.y));
 			})
-			.attr('opacity', 0.3)
+			.attr('opacity', 0.7)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
 
@@ -201,6 +199,8 @@ function init(){
 	maxLong		= d3.max(quakeData, function(d) { return + d.long;});
 	maxLat		= d3.max(quakeData, function(d) { return + d.lat;});
 	maxDepth	= d3.max(quakeData, function(d) { return + d.depth;});
+	colorScaleLight = "#FFE933";
+	colorScaleDark = "#D60041";
 	cnt = 0;
 
 	xScale = d3.scaleLinear()
@@ -219,8 +219,10 @@ function init(){
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
 
-	//Trying to work out color scale coupled with depth scale
-	colorScale = d3.scaleOrdinal(d3.schemeAccent);
+
+	colorScale = d3.scaleLinear()
+		.domain([minDepth, maxDepth])
+		.range([colorScaleLight, colorScaleDark]);
 
 	xGrid = [], scatter = [], yLine = [];
 	for(var z = -j; z < j; z++){
