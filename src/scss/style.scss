@@ -19,7 +19,12 @@ h1 {
 	min-height: 100vh;
 }
 
-circle {}
+circle {
+	&.quake-point {
+		stroke-width: 1;
+		stroke: white;
+	}
+}
 
 path, line {
 	stroke: black;
