@@ -39,7 +39,11 @@ xScale,
 zScale,
 depthScale,
 colorScale,
-magScale;
+magScale,
+viz,
+grid3d,
+yScale3d,
+point3d;
 
 
 //Data fetch
@@ -71,41 +75,10 @@ function debounce(func, wait, immediate) {
 };
 
 
-var svg = d3.select(vizHolder)
-				.append('svg')
-				.attr('height', height)
-				.attr('width', width)
-				.call(d3.drag().on('drag', dragged).on('start', dragStart).on('end', dragEnd))
+window.addEventListener('resize', debounce( function(){
+	init();
+} ), 250);
 
-var viz = svg.append('g')
-				.attr('id', 'viz');
-
-
-var grid3d = d3._3d()
-		.shape('GRID', j*2)
-		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter);
-
-var point3d = d3._3d()
-		.x(function(d){ return d.x; })
-		.y(function(d){ return d.y; })
-		.z(function(d){ return d.z; })
-		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter);
-
-var yScale3d = d3._3d()
-		.shape('LINE_STRIP')
-		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter);
 
 function processData(data, tt) {
 	/* ----------- GRID ----------- */
@@ -196,6 +169,47 @@ function magPoint(d){
 
 function init(){
 
+	height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	origin			= [width/2, 100];
+	d3.select(vizHolder).selectAll("*").remove();
+
+	var svg = d3.select(vizHolder)
+				.append('svg')
+				.attr('height', height)
+				.attr('width', width)
+				.call(d3.drag().on('drag', dragged).on('start', dragStart).on('end', dragEnd))
+
+	viz = svg.append('g')
+				.attr('id', 'viz');
+
+
+	grid3d = d3._3d()
+		.shape('GRID', j*2)
+		.origin(origin)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
+		.scale(scale)
+		.rotateCenter(rotateCenter);
+
+	point3d = d3._3d()
+		.x(function(d){ return d.x; })
+		.y(function(d){ return d.y; })
+		.z(function(d){ return d.z; })
+		.origin(origin)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
+		.scale(scale)
+		.rotateCenter(rotateCenter);
+
+	yScale3d = d3._3d()
+		.shape('LINE_STRIP')
+		.origin(origin)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
+		.scale(scale)
+		.rotateCenter(rotateCenter);
+
 	minLong		= d3.min(quakeData, function(d) { return + d.long;});
 	minLat		= d3.min(quakeData, function(d) { return + d.lat;});
 	minDepth	= d3.min(quakeData, function(d) { return + d.depth;});
@@ -251,11 +265,10 @@ function init(){
 			yLine.push([-j, d, -j]);
 		});
 
-
 	var data = [
-		grid3d(xGrid),
-		point3d(scatter),
-		yScale3d([yLine]),
+		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
+		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
+		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
 	];
 
 	processData(data, 1000);
