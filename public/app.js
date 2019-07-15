@@ -127,7 +127,7 @@ function processData(data, tt) {
 
 	points.enter()
 			.append('circle')
-			.attr('class', '_3d')
+			.attr('class', '_3d quake-point')
 			.attr('opacity', 0)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
