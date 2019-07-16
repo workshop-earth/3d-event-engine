@@ -1,56 +1,29 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var
-vizHolder 		= document.querySelector('#vizHolder'),
-request 		= new XMLHttpRequest(),
-datapath 		= './data.json',
-height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-j						= 6,
-// scale				= 50,
-yScaleMin = 1,
-yScaleMax = j * 2, // Match depth (Y) units to ~X/Z units
-yScaleBuffer = 1,
-scatter			= [],
-yLine			= [],
-xGrid			= [],
-beta			= 0,
-alpha			= 0,
-gridEdgeBuffer	= 25,
-key				= function(d){ return d.id; },
-startAngle		= Math.PI/5,
-startAngleY		= startAngle,
-startAngleX		= -startAngle / 5,
-rotateCenter = [0,6,0];
+var vizHolder 			= document.querySelector('#vizHolder'),
+		request 				= new XMLHttpRequest(),
+		datapath 				= './data.json',
+		height 					= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
+		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+		j								= 6,
+		yScaleMin 			= 1,
+		yScaleMax 			= j * 2, // Match depth (Y) units to ~X/Z units
+		yScaleBuffer 		= 1,
+		scatter					= [],
+		yLine						= [],
+		xGrid						= [],
+		beta						= 0,
+		alpha						= 0,
+		gridEdgeBuffer	= 25,
+		key							= function(d){ return d.id; },
+		startAngle			= Math.PI/5,
+		startAngleY			= startAngle,
+		startAngleX			= -startAngle / 5,
+		rotateCenter 		= [0,6,0];
 
 
-
-
-var
-quakeData,
-data,
-origin,
-scale,
-mx,
-my,
-mouseX,
-mouseY,
-minLong,
-minLat,
-minDepth,
-maxLong,
-maxLat,
-maxDepth,
-cnt,
-xScale,
-zScale,
-depthScale,
-colorScale,
-magScale,
-viz,
-grid3d,
-yScale3d,
-point3d;
+// Uninitialized variables
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minLong, minLat, minDepth, maxLong, maxLat, maxDepth, cnt, xScale, zScale, depthScale, colorScale, magScale, viz, grid3d, yScale3d, point3d;
 
 
 //Data fetch
@@ -85,13 +58,12 @@ function debounce(func, wait, immediate) {
 // Re-initialize visualization on window resize (debounced)
 window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
-
 function init(dur) {
 	var durAnimIn = dur;
+
 	height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	scale = Math.min(width * 0.045, 50);
-
+	scale 			= Math.min(width * 0.045, 50);
 	//Little bit of magic to get best visual center, offset 100px from top
 	origin			= [width/1.86, 100];
 	d3.select(vizHolder).selectAll("*").remove();
@@ -104,7 +76,6 @@ function init(dur) {
 
 	viz = svg.append('g')
 				.attr('id', 'viz');
-
 
 	grid3d = d3._3d()
 		.shape('GRID', j*2)
