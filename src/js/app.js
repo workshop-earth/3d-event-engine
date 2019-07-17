@@ -304,7 +304,7 @@ function updateDataArray() {
 	data = [
 		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
 		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
-		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
+		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine])
 	];
 }
 
