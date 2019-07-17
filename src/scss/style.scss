@@ -23,6 +23,11 @@ circle {
 	&.quake-point {
 		stroke-width: 1;
 		stroke: #333;
+		// &.expired {
+		// 	stroke: red;
+		// }
+		opacity: 1;
+		transition: opacity 1s;
 	}
 }
 
