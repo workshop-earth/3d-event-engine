@@ -6,15 +6,14 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		height 					= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
 		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
 		j								= 6,
-		yScaleMin 			= 1,
-		yScaleMax 			= j * 2, // Match depth (Y) units to ~X/Z units
+		yScaleMin 			= -1, // yScaleMin has to be dynamic; need to determine how many units above 0 (sea level) are needed
+		yScaleMax 			= (j * 2) - 2, // Match depth (Y) units to ~X/Z units
 		yScaleBuffer 		= 1,
 		scatter					= [],
 		yLine						= [],
 		xGrid						= [],
 		beta						= 0,
 		alpha						= 0,
-		gridEdgeBuffer	= 25,
 		key							= function(d){ return d.id; },
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
@@ -24,7 +23,7 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 
 
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, point3d;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, point3d;
 
 
 //Data fetch
@@ -117,24 +116,29 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter);
 
-	minZ		= d3.min(quakeData, function(d) { return + d.z;});
-	minX		= d3.min(quakeData, function(d) { return + d.x;});
+	minZ			= d3.min(quakeData, function(d) { return + d.z;});
+	minX			= d3.min(quakeData, function(d) { return + d.x;});
 	minDepth	= d3.min(quakeData, function(d) { return + d.y;});
-	minMag	= d3.min(quakeData, function(d) { return + d.mag;});
-	maxZ		= d3.max(quakeData, function(d) { return + d.z;});
-	maxX		= d3.max(quakeData, function(d) { return + d.x;});
+	minMag		= d3.min(quakeData, function(d) { return + d.mag;});
+	maxZ			= d3.max(quakeData, function(d) { return + d.z;});
+	maxX			= d3.max(quakeData, function(d) { return + d.x;});
 	maxDepth	= d3.max(quakeData, function(d) { return + d.y;});
 	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
+
+	var xMean = d3.mean(quakeData, function(d) { return + d.x;});
+	var zMean = d3.mean(quakeData, function(d) { return + d.z;});
+	gridEdgeBuffer = Math.max(xMean, zMean);
 	colorScaleLight = "#FFE933";
 	colorScaleDark = "#D60041";
 	cnt = 0;
 
+
 	xScale = d3.scaleLinear()
-		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
+		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	zScale = d3.scaleLinear()
-		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
+		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	//Modify outpute range of radii based on viewport size
@@ -172,6 +176,7 @@ function init(dur) {
 
 	d3.range(yScaleMin, yScaleMax, 1)
 		.forEach(function(d) {
+			console.log(d);
 			yLine.push([-j, d, -j]);
 		});
 
@@ -261,7 +266,9 @@ function processData(data, tt) {
 				return d.projected.y;
 			})
 			.text(function(d){
-				return d[1] >= 2 ? Math.round(depthScale.invert(d[1]) * 1) / 1 : '';
+				// return d[1] >= 2 ? Math.round(depthScale.invert(d[1]) * 1) / 1 : '';
+				//Round and invert Y labels
+				return (Math.round(depthScale.invert(d[1]) * -1) / 1);
 			});
 
 	yText.exit().remove();
