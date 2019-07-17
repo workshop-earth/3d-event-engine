@@ -269,30 +269,6 @@ function processData(data, tt) {
 	d3.selectAll('._3d').sort(d3._3d().sort);
 }
 
-// function drawPoints(data, tt) {
-// 	/* ----------- POINTS ----------- */
-// 	var currentData = data[1].filter(quake => quake.time == timeElapsed);
-// 	var points = viz.selectAll('circle').data(currentData, key);
-
-// 	points.enter()
-// 			.append('circle')
-// 			.attr('class', '_3d quake-point')
-// 			.attr('opacity', 0)
-// 			.attr('cx', posPointX)
-// 			.attr('cy', posPointY)
-// 			.merge(points)
-// 			.transition().duration(tt)
-// 			.attr('r', magPoint)
-// 			.attr('fill', function(d){
-// 				return colorScale(depthScale.invert(d.y));
-// 			})
-// 			.attr('opacity', 0.7)
-// 			.attr('cx', posPointX)
-// 			.attr('cy', posPointY);
-
-// 	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
-// }
-
 function posPointX(d){
 	return d.projected.x;
 }
