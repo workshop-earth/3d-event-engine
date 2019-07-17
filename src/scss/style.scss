@@ -1,5 +1,7 @@
 @import 'reset';
 
+$blue: #35a0f2;
+
 *, *:before, *:after {
 	box-sizing: border-box;
 }
@@ -29,6 +31,13 @@ circle {
 		opacity: 1;
 		transition: opacity 1s;
 	}
+}
+
+.grid-panel {
+	fill: $blue;
+	stroke: $blue;
+	fill-opacity: 0.04;
+	stroke-opacity: 0.6;
 }
 
 path, line {
