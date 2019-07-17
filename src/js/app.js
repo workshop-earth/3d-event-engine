@@ -24,7 +24,7 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 
 
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minLong, minLat, minDepth, maxLong, maxLat, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, magScale, viz, grid3d, yScale3d, point3d;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, point3d;
 
 
 //Data fetch
@@ -117,29 +117,30 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter);
 
-	minLong		= d3.min(quakeData, function(d) { return + d.long;});
-	minLat		= d3.min(quakeData, function(d) { return + d.lat;});
-	minDepth	= d3.min(quakeData, function(d) { return + d.depth;});
-	maxLong		= d3.max(quakeData, function(d) { return + d.long;});
-	maxLat		= d3.max(quakeData, function(d) { return + d.lat;});
-	maxDepth	= d3.max(quakeData, function(d) { return + d.depth;});
+	minZ		= d3.min(quakeData, function(d) { return + d.z;});
+	minX		= d3.min(quakeData, function(d) { return + d.x;});
+	minDepth	= d3.min(quakeData, function(d) { return + d.y;});
+	minMag	= d3.min(quakeData, function(d) { return + d.mag;});
+	maxZ		= d3.max(quakeData, function(d) { return + d.z;});
+	maxX		= d3.max(quakeData, function(d) { return + d.x;});
+	maxDepth	= d3.max(quakeData, function(d) { return + d.y;});
 	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
 	colorScaleLight = "#FFE933";
 	colorScaleDark = "#D60041";
 	cnt = 0;
 
 	xScale = d3.scaleLinear()
-		.domain([minLong - gridEdgeBuffer, maxLong + gridEdgeBuffer])
+		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	zScale = d3.scaleLinear()
-		.domain([minLat - gridEdgeBuffer, maxLat + gridEdgeBuffer])
+		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	//Modify outpute range of radii based on viewport size
 	var magModifier = scale / 50;
 	magScale = d3.scaleLinear()
-		.domain([0, 10])
+		.domain([minMag, 10])
 		.range([5 * magModifier, 50 * magModifier]);
 
 
@@ -158,9 +159,9 @@ function init(dur) {
 			xGrid.push([x, 1, z]);
 			while (cnt < quakeData.length) {
 				scatter.push({
-					x:		xScale(quakeData[cnt].long),
-					y:		depthScale(quakeData[cnt].depth),
-					z:		zScale(quakeData[cnt].lat),
+					x:		xScale(quakeData[cnt].x),
+					y:		depthScale(quakeData[cnt].y),
+					z:		zScale(quakeData[cnt].z),
 					mag:	quakeData[cnt].mag,
 					time: quakeData[cnt].time,
 					id:		'point_' + cnt++
@@ -174,9 +175,9 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	// updateDataArray();
-	// processData(data, dur);
-	animate();
+	updateDataArray();
+	processData(data, dur);
+	// animate();
 }
 
 function processData(data, tt) {
@@ -195,14 +196,15 @@ function processData(data, tt) {
 	xGrid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	var currentData = data[1].filter(quake => quake.time <= timeElapsed);
-	currentData.forEach(function(quake){
-		if (quake.time < timeElapsed) {
-			quake.expired = true;
-		}
-	});
-	console.log(currentData);
-	var points = viz.selectAll('circle').data(currentData, key);
+	// var currentData = data[1].filter(quake => quake.time <= timeElapsed);
+	// currentData.forEach(function(quake){
+	// 	if (quake.time < timeElapsed) {
+	// 		quake.expired = true;
+	// 	}
+	// });
+	// console.log(currentData);
+	// var points = viz.selectAll('circle').data(currentData, key);
+	var points = viz.selectAll('circle').data(data[1], key);
 	points.enter()
 			.append('circle')
 			.attr('class', function(d){
