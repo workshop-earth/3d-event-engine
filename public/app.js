@@ -19,11 +19,12 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
-		rotateCenter 		= [0,6,0];
+		rotateCenter 		= [0,6,0],
+		timeElapsed			= 0;
 
 
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minLong, minLat, minDepth, maxLong, maxLat, maxDepth, cnt, xScale, zScale, depthScale, colorScale, magScale, viz, grid3d, yScale3d, point3d;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minLong, minLat, minDepth, maxLong, maxLat, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, magScale, viz, grid3d, yScale3d, point3d;
 
 
 //Data fetch
@@ -55,12 +56,25 @@ function debounce(func, wait, immediate) {
 };
 
 
+var updateInterval;
+function animate(){
+	updateInterval = setInterval(updateDataset, 100);
+}
+function updateDataset() {
+	updateDataArray();
+	processData(data, 0);
+	timeElapsed++;
+	console.log(timeElapsed);
+	if (timeElapsed >= maxTime) {
+		clearInterval(updateInterval);
+	}
+}
+
 // Re-initialize visualization on window resize (debounced)
 window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
 function init(dur) {
 	var durAnimIn = dur;
-
 	height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	scale 			= Math.min(width * 0.045, 50);
@@ -109,6 +123,7 @@ function init(dur) {
 	maxLong		= d3.max(quakeData, function(d) { return + d.long;});
 	maxLat		= d3.max(quakeData, function(d) { return + d.lat;});
 	maxDepth	= d3.max(quakeData, function(d) { return + d.depth;});
+	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
 	colorScaleLight = "#FFE933";
 	colorScaleDark = "#D60041";
 	cnt = 0;
@@ -147,6 +162,7 @@ function init(dur) {
 					y:		depthScale(quakeData[cnt].depth),
 					z:		zScale(quakeData[cnt].lat),
 					mag:	quakeData[cnt].mag,
+					time: quakeData[cnt].time,
 					id:		'point_' + cnt++
 				});
 			}
@@ -158,13 +174,9 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	data = [
-		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
-		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
-		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
-	];
-
-	processData(data, dur);
+	// updateDataArray();
+	// processData(data, dur);
+	animate();
 }
 
 function processData(data, tt) {
@@ -183,25 +195,38 @@ function processData(data, tt) {
 	xGrid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	var points = viz.selectAll('circle').data(data[1], key);
-
+	var currentData = data[1].filter(quake => quake.time <= timeElapsed);
+	currentData.forEach(function(quake){
+		if (quake.time < timeElapsed) {
+			quake.expired = true;
+		}
+	});
+	console.log(currentData);
+	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
-			.attr('class', '_3d quake-point')
-			.attr('opacity', 0)
+			.attr('class', function(d){
+				var classStr = '_3d quake-point';
+				if (d.expired) {
+					console.log('expired');
+					classStr += ' expired'
+				}
+				return classStr
+			})
+			// .attr('opacity', 1)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
 			.merge(points)
-			.transition().duration(tt)
+			// .transition().duration(tt)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
 				return colorScale(depthScale.invert(d.y));
 			})
-			.attr('opacity', 0.7)
+			.attr('opacity', 0)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
 
-	points.exit().remove();
+	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
 
 	/* ----------- y-Scale ----------- */
 	var yScale = viz.selectAll('path.yScale').data(data[2]);
@@ -242,6 +267,30 @@ function processData(data, tt) {
 	d3.selectAll('._3d').sort(d3._3d().sort);
 }
 
+// function drawPoints(data, tt) {
+// 	/* ----------- POINTS ----------- */
+// 	var currentData = data[1].filter(quake => quake.time == timeElapsed);
+// 	var points = viz.selectAll('circle').data(currentData, key);
+
+// 	points.enter()
+// 			.append('circle')
+// 			.attr('class', '_3d quake-point')
+// 			.attr('opacity', 0)
+// 			.attr('cx', posPointX)
+// 			.attr('cy', posPointY)
+// 			.merge(points)
+// 			.transition().duration(tt)
+// 			.attr('r', magPoint)
+// 			.attr('fill', function(d){
+// 				return colorScale(depthScale.invert(d.y));
+// 			})
+// 			.attr('opacity', 0.7)
+// 			.attr('cx', posPointX)
+// 			.attr('cy', posPointY);
+
+// 	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
+// }
+
 function posPointX(d){
 	return d.projected.x;
 }
@@ -264,12 +313,16 @@ function dragged(){
 	mouseY = mouseY || 0;
 	beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
 	alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
-	var data = [
+	updateDataArray();
+	processData(data, 0);
+}
+
+function updateDataArray() {
+	data = [
 		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
 		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
 		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
 	];
-	processData(data, 0);
 }
 
 function dragEnd(){
