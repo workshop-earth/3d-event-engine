@@ -191,10 +191,10 @@ function processData(data, tt) {
 
 	xGrid.enter()
 			.append('path')
-			.attr('class', '_3d grid')
+			.attr('class', '_3d grid grid-panel')
 			.merge(xGrid)
-			.attr('fill', function(d){ return d.ccw ? 'white' : '#ffffff'; })
-			.attr('fill-opacity', 0.4)
+			// .attr('fill', function(d){ return d.ccw ? 'white' : '#ffffff'; })
+			// .attr('fill-opacity', 0.4)
 			.attr('d', grid3d.draw);
 
 
