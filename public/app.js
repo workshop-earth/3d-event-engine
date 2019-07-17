@@ -6,8 +6,8 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		height 					= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
 		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
 		j								= 6,
-		yScaleMin 			= -1, // yScaleMin has to be dynamic; need to determine how many units above 0 (sea level) are needed
-		yScaleMax 			= (j * 2) - 2, // Match depth (Y) units to ~X/Z units
+		yScaleMin 			= 0,
+		yScaleMax 			= (j * 2) - 1, // Match depth (Y) units to ~X/Z units
 		yScaleBuffer 		= 1,
 		scatter					= [],
 		yLine						= [],
@@ -96,7 +96,10 @@ function init(dur) {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateCenter(rotateCenter)
+		.y(function(){
+			return depthScale(0)
+		});
 
 	point3d = d3._3d()
 		.x(function(d){ return d.x; })
@@ -176,7 +179,6 @@ function init(dur) {
 
 	d3.range(yScaleMin, yScaleMax, 1)
 		.forEach(function(d) {
-			console.log(d);
 			yLine.push([-j, d, -j]);
 		});
 
@@ -193,8 +195,6 @@ function processData(data, tt) {
 			.append('path')
 			.attr('class', '_3d grid grid-panel')
 			.merge(xGrid)
-			// .attr('fill', function(d){ return d.ccw ? 'white' : '#ffffff'; })
-			// .attr('fill-opacity', 0.4)
 			.attr('d', grid3d.draw);
 
 
@@ -253,7 +253,6 @@ function processData(data, tt) {
 			.append('text')
 			.attr('class', '_3d yText')
 			.attr('dx', '-1em')
-			.attr('dy', '1em')
 			.attr('text-anchor', 'end')
 			.merge(yText)
 			.each(function(d){
@@ -266,7 +265,6 @@ function processData(data, tt) {
 				return d.projected.y;
 			})
 			.text(function(d){
-				// return d[1] >= 2 ? Math.round(depthScale.invert(d[1]) * 1) / 1 : '';
 				//Round and invert Y labels
 				return (Math.round(depthScale.invert(d[1]) * -1) / 1);
 			});
