@@ -325,6 +325,7 @@ function processData(data, tt) {
 			.attr('class', '_3d xText')
 			.attr('dx', '1em')
 			.attr('text-anchor', 'middle')
+			.style('display', 'none')
 			.merge(xText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -354,6 +355,7 @@ function processData(data, tt) {
 			.attr('dx', '-1em')
 			.attr('dy', '0.4em')
 			.attr('text-anchor', 'end')
+			.style('display', 'none')
 			.merge(zText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -419,6 +421,31 @@ function dragEnd(){
 	mouseX = d3.event.x - mx + mouseX;
 	mouseY = d3.event.y - my + mouseY;
 }
+
+
+
+// Quick debugging UI
+var btnViewBottom = document.querySelector('#btnViewBottom');
+var btnViewFront = document.querySelector('#btnViewFront');
+var toggleRangeX = document.querySelector('#showRangeX');
+var toggleRangeZ = document.querySelector('#showRangeZ');
+
+btnViewBottom.addEventListener('click', rBottom);
+btnViewFront.addEventListener('click', rFront);
+
+toggleRangeX.addEventListener('change', function(){
+	document.querySelectorAll('.xText').forEach(function(el){
+		if (el.style.display == "none") {el.style.display = "block";}
+		else {el.style.display = "none";}
+	});
+});
+
+toggleRangeZ.addEventListener('change', function(){
+	document.querySelectorAll('.zText').forEach(function(el){
+		if (el.style.display == "none") {el.style.display = "block";}
+		else {el.style.display = "none";}
+	});
+});
 
 //Quick debug to rotate to visual bottom
 function rBottom() {
