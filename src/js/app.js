@@ -5,10 +5,7 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		datapath 				= './data.json',
 		height 					= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
 		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-		j								= 6,
-		yScaleMin 			= 0,
-		yScaleMax 			= 5, // Y axis grid units
-		yScaleBuffer 		= 1,
+		j								= 6.5,
 		scatter					= [],
 		yLine						= [],
 		xLine						= [],
@@ -20,11 +17,10 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
-		rotateCenter 		= [-1,3,0],
 		timeElapsed			= 0;
 
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d, yScaleMax, rotateCenter;
 
 
 //Data fetch
@@ -81,6 +77,32 @@ function init(dur) {
 	//Little bit of magic to get best visual center, offset 100px from top
 	origin			= [width/1.86, 300];
 	d3.select(vizHolder).selectAll("*").remove();
+
+
+	minZ			= d3.min(quakeData, function(d) { return + d.z;});
+	minX			= d3.min(quakeData, function(d) { return + d.x;});
+	minDepth	= d3.min(quakeData, function(d) { return + d.y;});
+	minMag		= d3.min(quakeData, function(d) { return + d.mag;});
+	maxZ			= d3.max(quakeData, function(d) { return + d.z;});
+	maxX			= d3.max(quakeData, function(d) { return + d.x;});
+	maxDepth	= d3.max(quakeData, function(d) { return + d.y;});
+	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
+
+	var xMean = d3.mean(quakeData, function(d) { return + d.x;});
+	var zMean = d3.mean(quakeData, function(d) { return + d.z;});
+	var absX = Math.abs(minX - maxX);
+	var absZ = Math.abs(minZ - maxZ);
+	var absY = Math.abs(minDepth - maxDepth);
+	var largerAbs = Math.max(absX, absZ);
+	var rangeYRatio = absY / largerAbs;
+	yScaleMax = (j * 2 - 1) * rangeYRatio;
+
+	gridEdgeBuffer = Math.max(xMean, zMean);
+	colorScaleLight = "#FFE933";
+	colorScaleDark = "#D60041";
+	cnt = 0;
+
+	rotateCenter = [-1,yScaleMax/2,0];
 
 	var svg = d3.select(vizHolder)
 				.append('svg')
@@ -141,33 +163,6 @@ function init(dur) {
 		});
 
 
-	minZ			= d3.min(quakeData, function(d) { return + d.z;});
-	minX			= d3.min(quakeData, function(d) { return + d.x;});
-	minDepth	= d3.min(quakeData, function(d) { return + d.y;});
-	minMag		= d3.min(quakeData, function(d) { return + d.mag;});
-	maxZ			= d3.max(quakeData, function(d) { return + d.z;});
-	maxX			= d3.max(quakeData, function(d) { return + d.x;});
-	maxDepth	= d3.max(quakeData, function(d) { return + d.y;});
-	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
-
-	var xMean = d3.mean(quakeData, function(d) { return + d.x;});
-	var zMean = d3.mean(quakeData, function(d) { return + d.z;});
-	var absX = Math.abs(minX - maxX);
-	var absZ = Math.abs(minZ - maxZ);
-	if (absX > absZ) {
-		console.log('larger data range: X');
-	} else if (absX == absZ) {
-		console.log('X Z ranges equal');
-	} else {
-		console.log('larger data range: Z');
-	}
-
-	gridEdgeBuffer = Math.max(xMean, zMean);
-	colorScaleLight = "#FFE933";
-	colorScaleDark = "#D60041";
-	cnt = 0;
-
-
 	xScale = d3.scaleLinear()
 		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
 		.range([-j, j - 1]);
@@ -185,9 +180,10 @@ function init(dur) {
 
 
 	//Build scale for depth
+	var yScaleMin = 0;
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
-		.range([yScaleMin, yScaleMax - yScaleBuffer]);
+		.range([yScaleMin, yScaleMax]);
 
 	colorScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
@@ -210,7 +206,8 @@ function init(dur) {
 		}
 	}
 
-	d3.range(yScaleMin, yScaleMax, 0.8)
+	var yScaleBuffer	= 0.75;
+	d3.range(yScaleMin, yScaleMax + yScaleBuffer, 0.8)
 		.forEach(function(d) {
 			yLine.push([-j, d, -j]);
 		});
