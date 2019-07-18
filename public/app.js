@@ -7,7 +7,7 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
 		j								= 6,
 		yScaleMin 			= 0,
-		yScaleMax 			= (j * 2) - 1, // Match depth (Y) units to ~X/Z units
+		yScaleMax 			= 5, // Y axis grid units
 		yScaleBuffer 		= 1,
 		scatter					= [],
 		yLine						= [],
@@ -18,7 +18,7 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
-		rotateCenter 		= [0,6,0],
+		rotateCenter 		= [-1,3,0],
 		timeElapsed			= 0;
 
 
@@ -78,7 +78,7 @@ function init(dur) {
 	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	scale 			= Math.min(width * 0.045, 50);
 	//Little bit of magic to get best visual center, offset 100px from top
-	origin			= [width/1.86, 100];
+	origin			= [width/1.86, 200];
 	d3.select(vizHolder).selectAll("*").remove();
 
 	var svg = d3.select(vizHolder)
@@ -154,7 +154,7 @@ function init(dur) {
 	//Build scale for depth
 	depthScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
-		.range([yScaleMin + yScaleBuffer, yScaleMax - yScaleBuffer]);
+		.range([yScaleMin, yScaleMax - yScaleBuffer]);
 
 	colorScale = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
@@ -177,7 +177,7 @@ function init(dur) {
 		}
 	}
 
-	d3.range(yScaleMin, yScaleMax, 1)
+	d3.range(yScaleMin, yScaleMax, 0.8)
 		.forEach(function(d) {
 			yLine.push([-j, d, -j]);
 		});
