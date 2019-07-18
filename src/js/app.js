@@ -124,7 +124,10 @@ function init(dur) {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateCenter(rotateCenter)
+		.y(function(){
+			return depthScale(0)
+		});
 
 	zScale3d = d3._3d()
 		.shape('LINE_STRIP')
@@ -132,7 +135,10 @@ function init(dur) {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateCenter(rotateCenter)
+		.y(function(){
+			return depthScale(0)
+		});
 
 
 	minZ			= d3.min(quakeData, function(d) { return + d.z;});
@@ -146,6 +152,16 @@ function init(dur) {
 
 	var xMean = d3.mean(quakeData, function(d) { return + d.x;});
 	var zMean = d3.mean(quakeData, function(d) { return + d.z;});
+	var absX = Math.abs(minX - maxX);
+	var absZ = Math.abs(minZ - maxZ);
+	if (absX > absZ) {
+		console.log('larger data range: X');
+	} else if (absX == absZ) {
+		console.log('X Z ranges equal');
+	} else {
+		console.log('larger data range: Z');
+	}
+
 	gridEdgeBuffer = Math.max(xMean, zMean);
 	colorScaleLight = "#FFE933";
 	colorScaleDark = "#D60041";
@@ -199,12 +215,12 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(xScale(minX), xScale(maxX), 1.2)
+	d3.range(xScale(minX) - 1, xScale(maxX) + 1, 1)
 		.forEach(function(d) {
 			xLine.push([d, 0, -j]);
 		});
 
-	d3.range(zScale(minZ), zScale(maxZ), 1.2)
+	d3.range(zScale(minZ) - 1, zScale(maxZ) + 1, 1)
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
@@ -293,35 +309,22 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Y labels
-				return (Math.round(depthScale.invert(d[1]) * 1) / 1);
+				return (Math.round(depthScale.invert(d[1]) * -1) / 1);
 			});
 
 	yText.exit().remove();
 
 
-
-
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
-	/* ----------- x-Scale ----------- */
-	var xScaleKey = viz.selectAll('path.xScaleKey').data(data[2].x);
-
-	xScaleKey.enter()
-			.append('path')
-			.attr('class', '_3d yScale')
-			.merge(xScaleKey)
-			.attr('d', xScale3d.draw);
-
-	xScaleKey.exit().remove();
-
 	/* ----------- x-Scale Text ----------- */
 	var xText = viz.selectAll('text.xText').data(data[2].x[0]);
 
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
-			.attr('dx', '-1em')
-			.attr('text-anchor', 'start')
+			.attr('dx', '1em')
+			.attr('text-anchor', 'middle')
 			.merge(xText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -342,17 +345,6 @@ function processData(data, tt) {
 
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
-	/* ----------- z-Scale ----------- */
-	// var zScaleKey = viz.selectAll('path.zScaleKey').data(data[2].z);
-
-	// zScaleKey.enter()
-	// 		.append('path')
-	// 		.attr('class', '_3d zScale')
-	// 		.merge(zScaleKey)
-	// 		.attr('d', zScale3d.draw);
-
-	// zScaleKey.exit().remove();
-
 	/* ----------- z-Scale Text ----------- */
 	var zText = viz.selectAll('text.zText').data(data[2].z[0]);
 
@@ -360,7 +352,8 @@ function processData(data, tt) {
 			.append('text')
 			.attr('class', '_3d zText')
 			.attr('dx', '-1em')
-			.attr('text-anchor', 'start')
+			.attr('dy', '0.4em')
+			.attr('text-anchor', 'end')
 			.merge(zText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -373,7 +366,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Z labels
-				return (Math.round(zScale.invert(d[2]) * -1) / 1);
+				return (Math.round(zScale.invert(d[2]) * 1) / 1);
 			});
 
 	zText.exit().remove();
