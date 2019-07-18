@@ -293,7 +293,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Y labels
-				return (Math.round(depthScale.invert(d[1]) * -1) / 1);
+				return (Math.round(depthScale.invert(d[1]) * 1) / 1);
 			});
 
 	yText.exit().remove();
@@ -334,7 +334,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert X labels
-				return (Math.round(xScale.invert(d[0]) * -1) / 1);
+				return (Math.round(xScale.invert(d[0]) * 1) / 1);
 			});
 
 	xText.exit().remove();
@@ -425,4 +425,20 @@ function updateDataArray() {
 function dragEnd(){
 	mouseX = d3.event.x - mx + mouseX;
 	mouseY = d3.event.y - my + mouseY;
+}
+
+//Quick debug to rotate to visual bottom
+function rBottom() {
+	alpha  = -1.4478644403500787;
+	beta   = -0.6283185307179586;
+	updateDataArray();
+	processData(data, 0);
+}
+
+//Quick debug to rotate to visual bottom
+function rFront() {
+	alpha  = 0.12293188644481799;
+	beta   = -0.6283185307179586;
+	updateDataArray();
+	processData(data, 0);
 }
