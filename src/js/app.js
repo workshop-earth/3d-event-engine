@@ -264,8 +264,7 @@ function processData(data, tt) {
 
 
 	/* ----------- y-Scale ----------- */
-	var yScale = viz.selectAll('path.yScale').data(data[2].x);
-
+	var yScale = viz.selectAll('path.yScale').data(data[2].y);
 	yScale.enter()
 			.append('path')
 			.attr('class', '_3d yScale')
@@ -275,7 +274,7 @@ function processData(data, tt) {
 	yScale.exit().remove();
 
 	/* ----------- y-Scale Text ----------- */
-	var yText = viz.selectAll('text.yText').data(data[2].x[0]);
+	var yText = viz.selectAll('text.yText').data(data[2].y[0]);
 
 	yText.enter()
 			.append('text')
@@ -305,7 +304,7 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- x-Scale ----------- */
-	var xScaleKey = viz.selectAll('path.xScaleKey').data(data[2].y);
+	var xScaleKey = viz.selectAll('path.xScaleKey').data(data[2].x);
 
 	xScaleKey.enter()
 			.append('path')
@@ -316,7 +315,7 @@ function processData(data, tt) {
 	xScaleKey.exit().remove();
 
 	/* ----------- x-Scale Text ----------- */
-	var xText = viz.selectAll('text.xText').data(data[2].y[0]);
+	var xText = viz.selectAll('text.xText').data(data[2].x[0]);
 
 	xText.enter()
 			.append('text')
@@ -325,7 +324,6 @@ function processData(data, tt) {
 			.attr('text-anchor', 'start')
 			.merge(xText)
 			.each(function(d){
-				console.log(d);
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
 			})
 			.attr('x', function(d){
@@ -345,17 +343,17 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- z-Scale ----------- */
-	var zScaleKey = viz.selectAll('path.zScaleKey').data(data[2].z);
+	// var zScaleKey = viz.selectAll('path.zScaleKey').data(data[2].z);
 
-	zScaleKey.enter()
-			.append('path')
-			.attr('class', '_3d zScale')
-			.merge(zScaleKey)
-			.attr('d', zScale3d.draw);
+	// zScaleKey.enter()
+	// 		.append('path')
+	// 		.attr('class', '_3d zScale')
+	// 		.merge(zScaleKey)
+	// 		.attr('d', zScale3d.draw);
 
-	zScaleKey.exit().remove();
+	// zScaleKey.exit().remove();
 
-	/* ----------- x-Scale Text ----------- */
+	/* ----------- z-Scale Text ----------- */
 	var zText = viz.selectAll('text.zText').data(data[2].z[0]);
 
 	zText.enter()
@@ -365,7 +363,6 @@ function processData(data, tt) {
 			.attr('text-anchor', 'start')
 			.merge(zText)
 			.each(function(d){
-				console.log(d);
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
 			})
 			.attr('x', function(d){
