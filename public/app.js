@@ -11,6 +11,8 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		yScaleBuffer 		= 1,
 		scatter					= [],
 		yLine						= [],
+		xLine						= [],
+		zLine						= [],
 		xGrid						= [],
 		beta						= 0,
 		alpha						= 0,
@@ -21,9 +23,8 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		rotateCenter 		= [-1,3,0],
 		timeElapsed			= 0;
 
-
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, point3d;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d;
 
 
 //Data fetch
@@ -78,7 +79,7 @@ function init(dur) {
 	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	scale 			= Math.min(width * 0.045, 50);
 	//Little bit of magic to get best visual center, offset 100px from top
-	origin			= [width/1.86, 200];
+	origin			= [width/1.86, 300];
 	d3.select(vizHolder).selectAll("*").remove();
 
 	var svg = d3.select(vizHolder)
@@ -114,10 +115,25 @@ function init(dur) {
 	yScale3d = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
+		.scale(scale)
+		.rotateCenter(rotateCenter);
+
+	xScale3d = d3._3d()
+		.shape('LINE_STRIP')
+		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
 		.rotateCenter(rotateCenter);
+
+	zScale3d = d3._3d()
+		.shape('LINE_STRIP')
+		.origin(origin)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
+		.scale(scale)
+		.rotateCenter(rotateCenter);
+
 
 	minZ			= d3.min(quakeData, function(d) { return + d.z;});
 	minX			= d3.min(quakeData, function(d) { return + d.x;});
@@ -144,6 +160,7 @@ function init(dur) {
 		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
+
 	//Modify outpute range of radii based on viewport size
 	var magModifier = scale / 50;
 	magScale = d3.scaleLinear()
@@ -160,7 +177,7 @@ function init(dur) {
 		.domain([minDepth, maxDepth])
 		.range([colorScaleLight, colorScaleDark]);
 
-	xGrid = [], scatter = [], yLine = [];
+	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [];
 	for(var z = -j; z < j; z++){
 		for(var x = -j; x < j; x++){
 			xGrid.push([x, 1, z]);
@@ -180,6 +197,16 @@ function init(dur) {
 	d3.range(yScaleMin, yScaleMax, 0.8)
 		.forEach(function(d) {
 			yLine.push([-j, d, -j]);
+		});
+
+	d3.range(xScale(minX), xScale(maxX), 1.2)
+		.forEach(function(d) {
+			xLine.push([d, 0, -j]);
+		});
+
+	d3.range(zScale(minZ), zScale(maxZ), 1.2)
+		.forEach(function(d) {
+			zLine.push([-j, 0, d]);
 		});
 
 	updateDataArray();
@@ -235,8 +262,9 @@ function processData(data, tt) {
 
 	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
 
+
 	/* ----------- y-Scale ----------- */
-	var yScale = viz.selectAll('path.yScale').data(data[2]);
+	var yScale = viz.selectAll('path.yScale').data(data[2].x);
 
 	yScale.enter()
 			.append('path')
@@ -247,7 +275,7 @@ function processData(data, tt) {
 	yScale.exit().remove();
 
 	/* ----------- y-Scale Text ----------- */
-	var yText = viz.selectAll('text.yText').data(data[2][0]);
+	var yText = viz.selectAll('text.yText').data(data[2].x[0]);
 
 	yText.enter()
 			.append('text')
@@ -270,6 +298,90 @@ function processData(data, tt) {
 			});
 
 	yText.exit().remove();
+
+
+
+
+	// Debugging scale relativity
+		// Should remove all calculations if we don't want to display
+	/* ----------- x-Scale ----------- */
+	var xScaleKey = viz.selectAll('path.xScaleKey').data(data[2].y);
+
+	xScaleKey.enter()
+			.append('path')
+			.attr('class', '_3d yScale')
+			.merge(xScaleKey)
+			.attr('d', xScale3d.draw);
+
+	xScaleKey.exit().remove();
+
+	/* ----------- x-Scale Text ----------- */
+	var xText = viz.selectAll('text.xText').data(data[2].y[0]);
+
+	xText.enter()
+			.append('text')
+			.attr('class', '_3d xText')
+			.attr('dx', '-1em')
+			.attr('text-anchor', 'start')
+			.merge(xText)
+			.each(function(d){
+				console.log(d);
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+			.text(function(d){
+				//Round and invert X labels
+				return (Math.round(xScale.invert(d[0]) * -1) / 1);
+			});
+
+	xText.exit().remove();
+
+
+	// Debugging scale relativity
+		// Should remove all calculations if we don't want to display
+	/* ----------- z-Scale ----------- */
+	var zScaleKey = viz.selectAll('path.zScaleKey').data(data[2].z);
+
+	zScaleKey.enter()
+			.append('path')
+			.attr('class', '_3d zScale')
+			.merge(zScaleKey)
+			.attr('d', zScale3d.draw);
+
+	zScaleKey.exit().remove();
+
+	/* ----------- x-Scale Text ----------- */
+	var zText = viz.selectAll('text.zText').data(data[2].z[0]);
+
+	zText.enter()
+			.append('text')
+			.attr('class', '_3d zText')
+			.attr('dx', '-1em')
+			.attr('text-anchor', 'start')
+			.merge(zText)
+			.each(function(d){
+				console.log(d);
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+			.text(function(d){
+				//Round and invert Z labels
+				return (Math.round(zScale.invert(d[2]) * -1) / 1);
+			});
+
+	zText.exit().remove();
+
+
 
 	d3.selectAll('._3d').sort(d3._3d().sort);
 }
@@ -301,10 +413,15 @@ function dragged(){
 }
 
 function updateDataArray() {
+	var axes = {
+		x: xScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([xLine]),
+		y: yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
+		z: zScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([zLine])
+	};
 	data = [
 		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
 		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
-		yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine])
+		axes
 	];
 }
 
