@@ -19,21 +19,35 @@ var vizHolder 			= document.querySelector('#vizHolder'),
 		startAngleX			= -startAngle / 5,
 		timeElapsed			= 0;
 
+var uiMinMag			= document.querySelector('#minMag');
+uiMinMag.value = uiMinMag.dataset.value;
+
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d, yScaleMax, rotateCenter;
+var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magFloor, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d, yScaleMax, rotateCenter;
 
 
 //Data fetch
-request.open('GET', datapath, true);
-request.onload = function() {
-	if (request.status >= 200 && request.status < 400) {
-		console.log('Data received');
-		quakeData = JSON.parse(request.responseText).quakes;
-		init(1000);
-	} else { console.log('Reached our target server, but it returned an error'); }
-};
-request.onerror = function() { console.log('There was a connection error of some sort'); };
-request.send();
+fetchData(uiMinMag.dataset.value);
+function fetchData(minMag){
+	request.open('GET', datapath, true);
+	request.onload = function() {
+		if (request.status >= 200 && request.status < 400) {
+			console.log('Data received');
+			quakeData = JSON.parse(request.responseText).quakes;
+			magFloor = d3.min(quakeData, function(d) { return + d.mag;});
+			quakeData = quakeData.filter(function(quake) {
+				return quake.mag >= minMag;
+			});
+			if (quakeData.length > 1) {
+				init(1000);
+			} else {
+				alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude");
+			}
+		} else { console.log('Reached our target server, but it returned an error'); }
+	};
+	request.onerror = function() { console.log('There was a connection error of some sort'); };
+	request.send();
+}
 
 
 function debounce(func, wait, immediate) {
@@ -175,8 +189,8 @@ function init(dur) {
 	//Modify outpute range of radii based on viewport size
 	var magModifier = scale / 50;
 	magScale = d3.scaleLinear()
-		.domain([minMag, 10])
-		.range([5 * magModifier, 50 * magModifier]);
+		.domain([magFloor, 10])
+		.range([2 * magModifier, 50 * magModifier]);
 
 
 	//Build scale for depth
@@ -322,7 +336,9 @@ function processData(data, tt) {
 			.attr('class', '_3d xText')
 			.attr('dx', '1em')
 			.attr('text-anchor', 'middle')
-			.style('display', 'none')
+			.style('display', function(){
+				return rangeXVisible ? 'block' : 'none';
+			})
 			.merge(xText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -352,7 +368,9 @@ function processData(data, tt) {
 			.attr('dx', '-1em')
 			.attr('dy', '0.4em')
 			.attr('text-anchor', 'end')
-			.style('display', 'none')
+			.style('display', function(){
+				return rangeZVisible ? 'block' : 'none';
+			})
 			.merge(zText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -426,22 +444,46 @@ var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
 var toggleRangeX = document.querySelector('#showRangeX');
 var toggleRangeZ = document.querySelector('#showRangeZ');
+var rangeXVisible = isRangeVisible(toggleRangeX);
+var rangeZVisible = isRangeVisible(toggleRangeZ);
+
 
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 
+uiMinMag.addEventListener('change', function(e){
+	e.target.dataset.value = e.target.value
+	fetchData(uiMinMag.dataset.value);
+});
+
+function isRangeVisible(el) {
+	return el.checked;
+}
+
 toggleRangeX.addEventListener('change', function(){
-	document.querySelectorAll('.xText').forEach(function(el){
-		if (el.style.display == "none") {el.style.display = "block";}
-		else {el.style.display = "none";}
-	});
+	if (rangeXVisible) {
+		document.querySelectorAll('.xText').forEach(function(el){
+			el.style.display = "none";
+		});
+	} else {
+		document.querySelectorAll('.xText').forEach(function(el){
+			el.style.display = "block";
+		});
+	}
+	rangeXVisible = isRangeVisible(toggleRangeX);
 });
 
 toggleRangeZ.addEventListener('change', function(){
-	document.querySelectorAll('.zText').forEach(function(el){
-		if (el.style.display == "none") {el.style.display = "block";}
-		else {el.style.display = "none";}
-	});
+	if (rangeZVisible) {
+		document.querySelectorAll('.zText').forEach(function(el){
+			el.style.display = "none";
+		});
+	} else {
+		document.querySelectorAll('.zText').forEach(function(el){
+			el.style.display = "block";
+		});
+	}
+	rangeZVisible = isRangeVisible(toggleRangeZ);
 });
 
 //Quick debug to rotate to visual bottom

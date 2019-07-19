@@ -66,6 +66,17 @@ text {
 	right: 0;
 	padding: 2rem;
 	font-family: 'Helvetica';
+	&-input {
+		input[type="number"] {
+			width: 4rem;
+			height: 2rem;
+			margin-bottom: 1rem;
+			margin-right: 0.75rem;
+			text-align: center;
+			font-size: 1rem;
+			text-indent: 0.5rem;
+		}
+	}
 	&-checkbox {
 		input[type="checkbox"] {
 			margin-right: 0.75rem;
