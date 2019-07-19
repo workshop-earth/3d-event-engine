@@ -1,34 +1,54 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var vizHolder 			= document.querySelector('#vizHolder'),
-		request 				= new XMLHttpRequest(),
-		datapath 				= './data.json',
-		height 					= Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-		width 					= Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-		j								= 6.5,
-		scatter					= [],
+var scatter					= [],
 		yLine						= [],
 		xLine						= [],
 		zLine						= [],
 		xGrid						= [],
 		beta						= 0,
 		alpha						= 0,
-		key							= function(d){ return d.id; },
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
-		timeElapsed			= 0;
+		timeElapsed			= 0,
+		uiMinMag			= document.querySelector('#minMag');
 
-var uiMinMag			= document.querySelector('#minMag');
 uiMinMag.value = uiMinMag.dataset.value;
 
 // Uninitialized variables
-var quakeData, data, origin, scale, mx, my, mouseX, mouseY, minZ, minX, gridEdgeBuffer, minDepth, maxZ, maxX, maxDepth, maxTime, cnt, xScale, zScale, depthScale, colorScale, minMag, magFloor, magScale, viz, grid3d, yScale3d, xScale3d, zScale3d, point3d, yScaleMax, rotateCenter;
+var quakeData,
+		data,
+		mx,
+		my,
+		mouseX,
+		mouseY,
+		maxTime,
+		minMag,
+		magFloor,
+		viz,
+		grid3d,
+		point3d;
+
+var scale2d = {
+	x: null,
+	z: null,
+	depth: null,
+	color: null,
+	mag: null
+}
+
+var scale3d = {
+	x: null,
+	y: null,
+	z: null
+}
 
 
 //Data fetch
 fetchData(uiMinMag.dataset.value);
 function fetchData(minMag){
+	var request	= new XMLHttpRequest(),
+			datapath	= './data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -38,11 +58,10 @@ function fetchData(minMag){
 			quakeData = quakeData.filter(function(quake) {
 				return quake.mag >= minMag;
 			});
+			maxTime = d3.max(quakeData, function(d) { return + d.time;});
 			if (quakeData.length > 1) {
 				init(1000);
-			} else {
-				alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude");
-			}
+			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
 	request.onerror = function() { console.log('There was a connection error of some sort'); };
@@ -84,39 +103,42 @@ function updateDataset() {
 window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
 function init(dur) {
-	var durAnimIn = dur;
-	height 			= Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	width 			= Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	scale 			= Math.min(width * 0.045, 50);
-	//Little bit of magic to get best visual center, offset 100px from top
-	origin			= [width/1.86, 300];
+	var vizHolder	= document.querySelector('#vizHolder'),
+			durAnimIn = dur,
+			height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
+			width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+			j = 6.5,
+			scale	= Math.min(width * 0.045, 50);
+	//Little bit of magic to get best visual center, offset 300px from top
+	var origin = [width/1.86, 300],
+			minZ			= d3.min(quakeData, function(d) { return + d.z;}),
+			minX			= d3.min(quakeData, function(d) { return + d.x;}),
+			minDepth	= d3.min(quakeData, function(d) { return + d.y;}),
+			maxZ			= d3.max(quakeData, function(d) { return + d.z;}),
+			maxX			= d3.max(quakeData, function(d) { return + d.x;}),
+			maxDepth	= d3.max(quakeData, function(d) { return + d.y;}),
+			xMean = d3.mean(quakeData, function(d) { return + d.x;}),
+			zMean = d3.mean(quakeData, function(d) { return + d.z;}),
+			absX = Math.abs(minX - maxX),
+			absZ = Math.abs(minZ - maxZ),
+			absY = Math.abs(minDepth - maxDepth),
+			largerAbs = Math.max(absX, absZ),
+			rangeYRatio = absY / largerAbs,
+			gridEdgeBuffer = Math.max(xMean, zMean),
+			cnt = 0,
+			colorScaleLight = "#FFE933",
+			colorScaleDark = "#D60041",
+			yScaleMax = (j * 2 - 1) * rangeYRatio;
+
+	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
 
+	//**TODO: Resolve confusion around minimum and floor for magnitude
+	minMag = d3.min(quakeData, function(d) { return + d.mag;});
 
-	minZ			= d3.min(quakeData, function(d) { return + d.z;});
-	minX			= d3.min(quakeData, function(d) { return + d.x;});
-	minDepth	= d3.min(quakeData, function(d) { return + d.y;});
-	minMag		= d3.min(quakeData, function(d) { return + d.mag;});
-	maxZ			= d3.max(quakeData, function(d) { return + d.z;});
-	maxX			= d3.max(quakeData, function(d) { return + d.x;});
-	maxDepth	= d3.max(quakeData, function(d) { return + d.y;});
-	maxTime 	= d3.max(quakeData, function(d) { return + d.time;});
-
-	var xMean = d3.mean(quakeData, function(d) { return + d.x;});
-	var zMean = d3.mean(quakeData, function(d) { return + d.z;});
-	var absX = Math.abs(minX - maxX);
-	var absZ = Math.abs(minZ - maxZ);
-	var absY = Math.abs(minDepth - maxDepth);
-	var largerAbs = Math.max(absX, absZ);
-	var rangeYRatio = absY / largerAbs;
-	yScaleMax = (j * 2 - 1) * rangeYRatio;
-
-	gridEdgeBuffer = Math.max(xMean, zMean);
-	colorScaleLight = "#FFE933";
-	colorScaleDark = "#D60041";
-	cnt = 0;
-
-	rotateCenter = [-1,yScaleMax/2,0];
+	// Programmatically rotate around centerpoint of dynamic grid
+		// **TODO: Extend this for X/Z axes as well
+	var rotateCenter = [-1, (yScaleMax / 2) ,0];
 
 	var svg = d3.select(vizHolder)
 				.append('svg')
@@ -135,7 +157,7 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 		.y(function(){
-			return depthScale(0)
+			return scale2d.depth(0)
 		});
 
 	point3d = d3._3d()
@@ -148,13 +170,13 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter);
 
-	yScale3d = d3._3d()
+	scale3d.y = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
 		.scale(scale)
 		.rotateCenter(rotateCenter);
 
-	xScale3d = d3._3d()
+	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
 		.rotateY( startAngleY)
@@ -162,10 +184,10 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 		.y(function(){
-			return depthScale(0)
+			return scale2d.depth(0)
 		});
 
-	zScale3d = d3._3d()
+	scale3d.z = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
 		.rotateY( startAngleY)
@@ -173,33 +195,33 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 		.y(function(){
-			return depthScale(0)
+			return scale2d.depth(0)
 		});
 
 
-	xScale = d3.scaleLinear()
+	scale2d.x = d3.scaleLinear()
 		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
-	zScale = d3.scaleLinear()
+	scale2d.z = d3.scaleLinear()
 		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 
 	//Modify outpute range of radii based on viewport size
 	var magModifier = scale / 50;
-	magScale = d3.scaleLinear()
+	scale2d.mag = d3.scaleLinear()
 		.domain([magFloor, 10])
 		.range([2 * magModifier, 50 * magModifier]);
 
 
 	//Build scale for depth
 	var yScaleMin = 0;
-	depthScale = d3.scaleLinear()
+	scale2d.depth = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin, yScaleMax]);
 
-	colorScale = d3.scaleLinear()
+	scale2d.color = d3.scaleLinear()
 		.domain([minDepth, maxDepth])
 		.range([colorScaleLight, colorScaleDark]);
 
@@ -209,9 +231,9 @@ function init(dur) {
 			xGrid.push([x, 1, z]);
 			while (cnt < quakeData.length) {
 				scatter.push({
-					x:		xScale(quakeData[cnt].x),
-					y:		depthScale(quakeData[cnt].y),
-					z:		zScale(quakeData[cnt].z),
+					x:		scale2d.x(quakeData[cnt].x),
+					y:		scale2d.depth(quakeData[cnt].y),
+					z:		scale2d.z(quakeData[cnt].z),
 					mag:	quakeData[cnt].mag,
 					time: quakeData[cnt].time,
 					id:		'point_' + cnt++
@@ -226,12 +248,12 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(xScale(minX) - 1, xScale(maxX) + 1, 1)
+	d3.range(scale2d.x(minX) - 1, scale2d.x(maxX) + 1, 1)
 		.forEach(function(d) {
 			xLine.push([d, 0, -j]);
 		});
 
-	d3.range(zScale(minZ) - 1, zScale(maxZ) + 1, 1)
+	d3.range(scale2d.z(minZ) - 1, scale2d.z(maxZ) + 1, 1)
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
@@ -242,6 +264,8 @@ function init(dur) {
 }
 
 function processData(data, tt) {
+	var key	= function(d){ return d.id; };
+
 	/* ----------- GRID ----------- */
 	var xGrid = viz.selectAll('path.grid').data(data[0], key);
 
@@ -281,7 +305,7 @@ function processData(data, tt) {
 			// .transition().duration(tt)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
-				return colorScale(depthScale.invert(d.y));
+				return scale2d.color(scale2d.depth.invert(d.y));
 			})
 			.attr('opacity', 0)
 			.attr('cx', posPointX)
@@ -296,7 +320,7 @@ function processData(data, tt) {
 			.append('path')
 			.attr('class', '_3d yScale')
 			.merge(yScale)
-			.attr('d', yScale3d.draw);
+			.attr('d', scale3d.y.draw);
 
 	yScale.exit().remove();
 
@@ -320,7 +344,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Y labels
-				return (Math.round(depthScale.invert(d[1]) * -1) / 1);
+				return (Math.round(scale2d.depth.invert(d[1]) * -1) / 1);
 			});
 
 	yText.exit().remove();
@@ -351,7 +375,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert X labels
-				return (Math.round(xScale.invert(d[0]) * 1) / 1);
+				return (Math.round(scale2d.x.invert(d[0]) * 1) / 1);
 			});
 
 	xText.exit().remove();
@@ -383,7 +407,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Z labels
-				return (Math.round(zScale.invert(d[2]) * 1) / 1);
+				return (Math.round(scale2d.z.invert(d[2]) * 1) / 1);
 			});
 
 	zText.exit().remove();
@@ -402,7 +426,7 @@ function posPointY(d){
 }
 
 function magPoint(d){
-	return magScale(d.mag);
+	return scale2d.mag(d.mag);
 }
 
 function dragStart(){
@@ -421,9 +445,9 @@ function dragged(){
 
 function updateDataArray() {
 	var axes = {
-		x: xScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([xLine]),
-		y: yScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
-		z: zScale3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([zLine])
+		x: scale3d.x.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([xLine]),
+		y: scale3d.y.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
+		z: scale3d.z.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([zLine])
 	};
 	data = [
 		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
