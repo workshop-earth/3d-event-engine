@@ -488,7 +488,7 @@ toggleRangeZ.addEventListener('change', function(){
 
 //Quick debug to rotate to visual bottom
 function rBottom() {
-	alpha  = -1.4478644403500787;
+	alpha  = 1.6937282132397145;
 	beta   = -0.6283185307179586;
 	updateDataArray();
 	processData(data, 0);
