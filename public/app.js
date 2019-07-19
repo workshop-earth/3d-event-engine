@@ -5,8 +5,6 @@ var scatter					= [],
 		xLine						= [],
 		zLine						= [],
 		xGrid						= [],
-		beta						= 0,
-		alpha						= 0,
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
@@ -18,10 +16,6 @@ uiMinMag.value = uiMinMag.dataset.value;
 // Uninitialized variables
 var quakeData,
 		data,
-		mx,
-		my,
-		mouseX,
-		mouseY,
 		maxTime,
 		minMag,
 		magFloor,
@@ -43,6 +37,15 @@ var scale3d = {
 	z: null
 }
 
+var orbit = {
+	alpha: 0,
+	beta: 0,
+	mx: null,
+	my: null,
+	mouseX: null,
+	mouseY: null
+}
+
 
 //Data fetch
 fetchData(uiMinMag.dataset.value);
@@ -54,11 +57,15 @@ function fetchData(minMag){
 		if (request.status >= 200 && request.status < 400) {
 			console.log('Data received');
 			quakeData = JSON.parse(request.responseText).quakes;
-			magFloor = d3.min(quakeData, function(d) { return + d.mag;});
+
+			// Get max/min bounds for all datapoints from full dataset
+			generateBounds();
+
+			// Limit active dataset based on GUI input
 			quakeData = quakeData.filter(function(quake) {
 				return quake.mag >= minMag;
 			});
-			maxTime = d3.max(quakeData, function(d) { return + d.time;});
+
 			if (quakeData.length > 1) {
 				init(1000);
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
@@ -66,6 +73,13 @@ function fetchData(minMag){
 	};
 	request.onerror = function() { console.log('There was a connection error of some sort'); };
 	request.send();
+}
+
+function generateBounds() {
+	// **TODO: Create [spec]Floor/Ceil for each attribute
+		// Apply to scales instead of active max/mins
+	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
+	maxTime = d3.max(quakeData, function(d) { return + d.time;});
 }
 
 
@@ -200,10 +214,12 @@ function init(dur) {
 
 
 	scale2d.x = d3.scaleLinear()
+		// **TODO Use dataset floor/ceiling instead of active min/max
 		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	scale2d.z = d3.scaleLinear()
+		// **TODO Use dataset floor/ceiling instead of active min/max
 		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
@@ -218,10 +234,12 @@ function init(dur) {
 	//Build scale for depth
 	var yScaleMin = 0;
 	scale2d.depth = d3.scaleLinear()
+		// **TODO Use dataset floor/ceiling instead of active min/max
 		.domain([minDepth, maxDepth])
 		.range([yScaleMin, yScaleMax]);
 
 	scale2d.color = d3.scaleLinear()
+		// **TODO Use dataset floor/ceiling instead of active min/max
 		.domain([minDepth, maxDepth])
 		.range([colorScaleLight, colorScaleDark]);
 
@@ -430,35 +448,35 @@ function magPoint(d){
 }
 
 function dragStart(){
-	mx = d3.event.x;
-	my = d3.event.y;
+	orbit.mx = d3.event.x;
+	orbit.my = d3.event.y;
 }
 
 function dragged(){
-	mouseX = mouseX || 0;
-	mouseY = mouseY || 0;
-	beta   = (d3.event.x - mx + mouseX) * Math.PI / 230 ;
-	alpha  = (d3.event.y - my + mouseY) * Math.PI / 230  * (-1);
+	orbit.mouseX = orbit.mouseX || 0;
+	orbit.mouseY = orbit.mouseY || 0;
+	orbit.beta   = (d3.event.x - orbit.mx + orbit.mouseX) * Math.PI / 230 ;
+	orbit.alpha  = (d3.event.y - orbit.my + orbit.mouseY) * Math.PI / 230  * (-1);
 	updateDataArray();
 	processData(data, 0);
 }
 
 function updateDataArray() {
 	var axes = {
-		x: scale3d.x.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([xLine]),
-		y: scale3d.y.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([yLine]),
-		z: scale3d.z.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)([zLine])
+		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([xLine]),
+		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([yLine]),
+		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([zLine])
 	};
 	data = [
-		grid3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(xGrid),
-		point3d.rotateY(beta + startAngleY).rotateX(alpha + startAngleX)(scatter),
+		grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(xGrid),
+		point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(scatter),
 		axes
 	];
 }
 
 function dragEnd(){
-	mouseX = d3.event.x - mx + mouseX;
-	mouseY = d3.event.y - my + mouseY;
+	orbit.mouseX = d3.event.x - orbit.mx + orbit.mouseX;
+	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
 
@@ -512,16 +530,16 @@ toggleRangeZ.addEventListener('change', function(){
 
 //Quick debug to rotate to visual bottom
 function rBottom() {
-	alpha  = 1.6937282132397145;
-	beta   = -0.6283185307179586;
+	orbit.alpha  = 1.6937282132397145;
+	orbit.beta   = -0.6283185307179586;
 	updateDataArray();
 	processData(data, 0);
 }
 
 //Quick debug to rotate to visual bottom
 function rFront() {
-	alpha  = 0.12293188644481799;
-	beta   = -0.6283185307179586;
+	orbit.alpha  = 0.12293188644481799;
+	orbit.beta   = -0.6283185307179586;
 	updateDataArray();
 	processData(data, 0);
 }
