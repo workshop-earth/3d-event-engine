@@ -1,10 +1,6 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var scatter					= [],
-		yLine						= [],
-		xLine						= [],
-		zLine						= [],
-		xGrid						= [],
+var 	j = 6.5,
 		startAngle			= Math.PI/5,
 		startAngleY			= startAngle,
 		startAngleX			= -startAngle / 5,
@@ -15,13 +11,13 @@ uiMinMag.value = uiMinMag.dataset.value;
 
 // Uninitialized variables
 var quakeData,
-		data,
-		maxTime,
-		minMag,
-		magFloor,
-		viz,
-		grid3d,
-		point3d;
+	data,
+	maxTime,
+	minMag,
+	magFloor,
+	viz,
+	grid3d,
+	point3d;
 
 var scale2d = {
 	x: null,
@@ -76,10 +72,31 @@ function fetchData(minMag){
 }
 
 function generateBounds() {
-	// **TODO: Create [spec]Floor/Ceil for each attribute
-		// Apply to scales instead of active max/mins
+	xFloor = d3.min(quakeData, function(d) { return + d.x;});
+	xCeil = d3.max(quakeData, function(d) { return + d.x;});
+
+	zFloor = d3.min(quakeData, function(d) { return + d.z;});
+	zCeil = d3.max(quakeData, function(d) { return + d.z;});
+
+	xMean = d3.mean(quakeData, function(d) { return + d.x;});
+	zMean = d3.mean(quakeData, function(d) { return + d.z;});
+
+	yFloor = d3.min(quakeData, function(d) { return + d.y;});
+	yCeil = d3.max(quakeData, function(d) { return + d.y;});
+		
 	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
+	magCeil = d3.max(quakeData, function(d) { return + d.mag;});
+
 	maxTime = d3.max(quakeData, function(d) { return + d.time;});
+
+	absX = Math.abs(xFloor - xCeil);
+	absZ = Math.abs(zFloor - zCeil);
+	absY = Math.abs(yFloor - yCeil);
+	largerAbs = Math.max(absX, absZ);
+
+	rangeYRatio = absY / largerAbs;
+	yScaleMax = (j * 2 - 1) * rangeYRatio;
+	gridEdgeBuffer = Math.max(xMean, zMean);
 }
 
 
@@ -118,31 +135,16 @@ window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
 function init(dur) {
 	var vizHolder	= document.querySelector('#vizHolder'),
-			durAnimIn = dur,
-			height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-			width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-			j = 6.5,
-			scale	= Math.min(width * 0.045, 50);
+		durAnimIn = dur,
+		height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
+		width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
+		scale	= Math.min(width * 0.045, 50);
+
 	//Little bit of magic to get best visual center, offset 300px from top
 	var origin = [width/1.86, 300],
-			minZ			= d3.min(quakeData, function(d) { return + d.z;}),
-			minX			= d3.min(quakeData, function(d) { return + d.x;}),
-			minDepth	= d3.min(quakeData, function(d) { return + d.y;}),
-			maxZ			= d3.max(quakeData, function(d) { return + d.z;}),
-			maxX			= d3.max(quakeData, function(d) { return + d.x;}),
-			maxDepth	= d3.max(quakeData, function(d) { return + d.y;}),
-			xMean = d3.mean(quakeData, function(d) { return + d.x;}),
-			zMean = d3.mean(quakeData, function(d) { return + d.z;}),
-			absX = Math.abs(minX - maxX),
-			absZ = Math.abs(minZ - maxZ),
-			absY = Math.abs(minDepth - maxDepth),
-			largerAbs = Math.max(absX, absZ),
-			rangeYRatio = absY / largerAbs,
-			gridEdgeBuffer = Math.max(xMean, zMean),
-			cnt = 0,
-			colorScaleLight = "#FFE933",
-			colorScaleDark = "#D60041",
-			yScaleMax = (j * 2 - 1) * rangeYRatio;
+		cnt = 0,
+		colorScaleLight = "#FFE933",
+		colorScaleDark = "#D60041";
 
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
@@ -214,13 +216,11 @@ function init(dur) {
 
 
 	scale2d.x = d3.scaleLinear()
-		// **TODO Use dataset floor/ceiling instead of active min/max
-		.domain([minX - gridEdgeBuffer, maxX + gridEdgeBuffer])
+		.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 	scale2d.z = d3.scaleLinear()
-		// **TODO Use dataset floor/ceiling instead of active min/max
-		.domain([minZ - gridEdgeBuffer, maxZ + gridEdgeBuffer])
+		.domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
 
@@ -234,13 +234,11 @@ function init(dur) {
 	//Build scale for depth
 	var yScaleMin = 0;
 	scale2d.depth = d3.scaleLinear()
-		// **TODO Use dataset floor/ceiling instead of active min/max
-		.domain([minDepth, maxDepth])
+		.domain([yFloor, yCeil])
 		.range([yScaleMin, yScaleMax]);
 
 	scale2d.color = d3.scaleLinear()
-		// **TODO Use dataset floor/ceiling instead of active min/max
-		.domain([minDepth, maxDepth])
+		.domain([yFloor, yCeil])
 		.range([colorScaleLight, colorScaleDark]);
 
 	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [];
@@ -266,12 +264,12 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(scale2d.x(minX) - 1, scale2d.x(maxX) + 1, 1)
+	d3.range(scale2d.x(xFloor) - 1, scale2d.x(xCeil) + 1, 1)
 		.forEach(function(d) {
 			xLine.push([d, 0, -j]);
 		});
 
-	d3.range(scale2d.z(minZ) - 1, scale2d.z(maxZ) + 1, 1)
+	d3.range(scale2d.z(zFloor) - 1, scale2d.z(zCeil) + 1, 1)
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
