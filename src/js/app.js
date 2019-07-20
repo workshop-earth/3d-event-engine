@@ -232,12 +232,12 @@ function init(dur) {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(scale2d.x(xFloor) - 1, scale2d.x(xCeil) + 1, 1)
+	d3.range(scale2d.x(xFloor), scale2d.x(xCeil), 1)
 		.forEach(function(d) {
 			xLine.push([d, 0, -j]);
 		});
 
-	d3.range(scale2d.z(zFloor) - 1, scale2d.z(zCeil) + 1, 1)
+	d3.range(scale2d.z(zFloor), scale2d.z(zCeil), 1)
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
@@ -328,7 +328,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Y labels
-				return (Math.round(scale2d.depth.invert(d[1]) * -1) / 1);
+				return (Math.round(scale2d.depth.invert(d[1]) / 1000 * 10) / 10);
 			});
 
 	yText.exit().remove();
@@ -342,7 +342,7 @@ function processData(data, tt) {
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
-			.attr('dx', '1em')
+			.attr('dy', '-1em')
 			.attr('text-anchor', 'middle')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeX')) ? 'block' : 'none';
@@ -359,7 +359,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert X labels
-				return (Math.round(scale2d.x.invert(d[0]) * 1) / 1);
+				return (Math.round(scale2d.x.invert(d[0]) / 1000 * 10) / 10);
 			});
 
 	xText.exit().remove();
@@ -373,8 +373,7 @@ function processData(data, tt) {
 	zText.enter()
 			.append('text')
 			.attr('class', '_3d zText')
-			.attr('dx', '-1em')
-			.attr('dy', '0.4em')
+			.attr('dy', '-1em')
 			.attr('text-anchor', 'end')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeZ')) ? 'block' : 'none';
@@ -391,27 +390,17 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Z labels
-				return (Math.round(scale2d.z.invert(d[2]) * 1) / 1);
+				return (Math.round(scale2d.z.invert(d[2]) / 1000 * 10) / 10);
 			});
 
 	zText.exit().remove();
 
-
-
 	d3.selectAll('._3d').sort(d3._3d().sort);
 }
 
-function posPointX(d){
-	return d.projected.x;
-}
-
-function posPointY(d){
-	return d.projected.y;
-}
-
-function magPoint(d){
-	return scale2d.mag(d.mag);
-}
+function posPointX(d) { return d.projected.x; }
+function posPointY(d) { return d.projected.y; }
+function magPoint (d) { return scale2d.mag(d.mag); }
 
 function dragStart(){
 	orbit.mx = d3.event.x;
