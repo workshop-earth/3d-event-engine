@@ -196,7 +196,7 @@ function init(dur) {
 	var magModifier = scale / 50;
 	scale2d.mag = d3.scaleLinear()
 		.domain([magFloor, 10])
-		.range([2 * magModifier, 50 * magModifier]);
+		.range([2 * magModifier, 25 * magModifier]);
 
 
 	//Build scale for depth
