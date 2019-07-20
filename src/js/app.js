@@ -1,19 +1,16 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var 	j = 6.5,
-		startAngle			= Math.PI/5,
-		startAngleY			= startAngle,
-		startAngleX			= -startAngle / 5,
-		timeElapsed			= 0,
-		uiMinMag			= document.querySelector('#minMag');
-
-uiMinMag.value = uiMinMag.dataset.value;
+var j = 6.5,
+	startAngle = Math.PI/5,
+	startAngleY = startAngle,
+	startAngleX = -startAngle / 5,
+	timeElapsed = 0;
 
 // Uninitialized variables
 var quakeData,
 	data,
 	maxTime,
-	minMag,
+	targetMag,
 	magFloor,
 	viz,
 	grid3d,
@@ -42,34 +39,6 @@ var orbit = {
 	mouseY: null
 }
 
-
-//Data fetch
-fetchData(uiMinMag.dataset.value);
-function fetchData(minMag){
-	var request	= new XMLHttpRequest(),
-			datapath	= './data.json';
-	request.open('GET', datapath, true);
-	request.onload = function() {
-		if (request.status >= 200 && request.status < 400) {
-			console.log('Data received');
-			quakeData = JSON.parse(request.responseText).quakes;
-
-			// Get max/min bounds for all datapoints from full dataset
-			generateBounds();
-
-			// Limit active dataset based on GUI input
-			quakeData = quakeData.filter(function(quake) {
-				return quake.mag >= minMag;
-			});
-
-			if (quakeData.length > 1) {
-				init(1000);
-			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
-		} else { console.log('Reached our target server, but it returned an error'); }
-	};
-	request.onerror = function() { console.log('There was a connection error of some sort'); };
-	request.send();
-}
 
 function generateBounds() {
 	xFloor = d3.min(quakeData, function(d) { return + d.x;});
@@ -149,8 +118,7 @@ function init(dur) {
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
 
-	//**TODO: Resolve confusion around minimum and floor for magnitude
-	minMag = d3.min(quakeData, function(d) { return + d.mag;});
+	targetMag = d3.min(quakeData, function(d) { return + d.mag;});
 
 	// Programmatically rotate around centerpoint of dynamic grid
 		// **TODO: Extend this for X/Z axes as well
@@ -377,7 +345,7 @@ function processData(data, tt) {
 			.attr('dx', '1em')
 			.attr('text-anchor', 'middle')
 			.style('display', function(){
-				return rangeXVisible ? 'block' : 'none';
+				return isRangeVisible(document.querySelector('#showRangeX')) ? 'block' : 'none';
 			})
 			.merge(xText)
 			.each(function(d){
@@ -409,7 +377,7 @@ function processData(data, tt) {
 			.attr('dy', '0.4em')
 			.attr('text-anchor', 'end')
 			.style('display', function(){
-				return rangeZVisible ? 'block' : 'none';
+				return isRangeVisible(document.querySelector('#showRangeZ')) ? 'block' : 'none';
 			})
 			.merge(zText)
 			.each(function(d){
@@ -479,52 +447,39 @@ function dragEnd(){
 
 
 
-// Quick debugging UI
+// UI Operations
+var magInput = document.querySelector('#magInput');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
-var toggleRangeX = document.querySelector('#showRangeX');
-var toggleRangeZ = document.querySelector('#showRangeZ');
-var rangeXVisible = isRangeVisible(toggleRangeX);
-var rangeZVisible = isRangeVisible(toggleRangeZ);
-
+var toggleRanges = document.querySelectorAll('[data-range]');
 
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 
-uiMinMag.addEventListener('change', function(e){
-	e.target.dataset.value = e.target.value
-	fetchData(uiMinMag.dataset.value);
+magInput.addEventListener('change', function(e){
+	fetchData(magInput.value);
 });
 
-function isRangeVisible(el) {
-	return el.checked;
+toggleRanges.forEach(function(range){
+	range.addEventListener('change', function(e) {
+		handleToggleRange(e.target)
+	});
+});
+
+function handleToggleRange(target) {
+	var targetClass = '.' + target.dataset.range + 'Text';
+	if (isRangeVisible(target)) {
+		document.querySelectorAll(targetClass).forEach(function(el){
+			el.style.display = "block";
+		});
+	} else {
+		document.querySelectorAll(targetClass).forEach(function(el){
+			el.style.display = "none";
+		});
+	}
 }
 
-toggleRangeX.addEventListener('change', function(){
-	if (rangeXVisible) {
-		document.querySelectorAll('.xText').forEach(function(el){
-			el.style.display = "none";
-		});
-	} else {
-		document.querySelectorAll('.xText').forEach(function(el){
-			el.style.display = "block";
-		});
-	}
-	rangeXVisible = isRangeVisible(toggleRangeX);
-});
-
-toggleRangeZ.addEventListener('change', function(){
-	if (rangeZVisible) {
-		document.querySelectorAll('.zText').forEach(function(el){
-			el.style.display = "none";
-		});
-	} else {
-		document.querySelectorAll('.zText').forEach(function(el){
-			el.style.display = "block";
-		});
-	}
-	rangeZVisible = isRangeVisible(toggleRangeZ);
-});
+function isRangeVisible(el) { return el.checked; }
 
 //Quick debug to rotate to visual bottom
 function rBottom() {
@@ -540,4 +495,32 @@ function rFront() {
 	orbit.beta   = -0.6283185307179586;
 	updateDataArray();
 	processData(data, 0);
+}
+
+//Data fetch
+fetchData(magInput.value);
+function fetchData(targetMag){
+	var request	= new XMLHttpRequest(),
+			datapath	= './data.json';
+	request.open('GET', datapath, true);
+	request.onload = function() {
+		if (request.status >= 200 && request.status < 400) {
+			console.log('Data received');
+			quakeData = JSON.parse(request.responseText).quakes;
+
+			// Get max/min bounds for all datapoints from full dataset
+			generateBounds();
+
+			// Limit active dataset based on GUI input
+			quakeData = quakeData.filter(function(quake) {
+				return quake.mag >= targetMag;
+			});
+
+			if (quakeData.length > 1) {
+				init(1000);
+			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
+		} else { console.log('Reached our target server, but it returned an error'); }
+	};
+	request.onerror = function() { console.log('There was a connection error of some sort'); };
+	request.send();
 }
