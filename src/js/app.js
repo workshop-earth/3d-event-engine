@@ -10,7 +10,6 @@ var j = 6.5,
 var quakeData,
 	faultData,
 	data,
-	maxTime,
 	targetMag,
 	magFloor,
 	viz,
@@ -22,7 +21,8 @@ var scale2d = {
 	z: null,
 	depth: null,
 	color: null,
-	mag: null
+	mag: null,
+	time: null
 }
 
 var scale3d = {
@@ -57,7 +57,8 @@ function generateBounds() {
 	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
 	magCeil = d3.max(quakeData, function(d) { return + d.mag;});
 
-	maxTime = d3.max(quakeData, function(d) { return + d.time;});
+	timeFloor = d3.min(quakeData, function(d) { return + d.time;});
+	timeCeil = d3.max(quakeData, function(d) { return + d.time;});
 
 	absX = Math.abs(xFloor - xCeil);
 	absZ = Math.abs(zFloor - zCeil);
@@ -86,24 +87,26 @@ function debounce(func, wait, immediate) {
 };
 
 
-var updateInterval;
-function animate(){
-	updateInterval = setInterval(updateDataset, 100);
-}
-function updateDataset() {
-	updateDataArray();
-	processData(data, 0);
-	timeElapsed++;
-	console.log(timeElapsed);
-	if (timeElapsed >= maxTime) {
-		clearInterval(updateInterval);
+var start = null;
+var progress = null;
+var endtime = 20000;
+function step(timestamp) {
+	if (!start) start = timestamp;
+		progress = timestamp - start;
+		updateDataArray();
+	if (progress < endtime) {
+		window.requestAnimationFrame(step);
 	}
 }
+
 
 // Re-initialize visualization on window resize (debounced)
 window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
 function init(dur) {
+	start = null;
+	progress = null;
+
 	var vizHolder	= document.querySelector('#vizHolder'),
 		durAnimIn = dur,
 		height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
@@ -201,12 +204,17 @@ function init(dur) {
 		.range([-j, j - 1]);
 
 
+
 	//Modify outpute range of radii based on viewport size
 	var magModifier = scale / 50;
 	scale2d.mag = d3.scaleLinear()
 		.domain([magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
 
+
+	scale2d.time = d3.scaleLinear()
+		.domain([timeFloor, timeCeil])
+		.range([0, endtime]);
 
 	//Build scale for depth
 	var yScaleMin = 0;
@@ -257,9 +265,7 @@ function init(dur) {
 		faultPlane.push(arr);
 	});
 
-	updateDataArray();
-	processData(data, dur);
-	// animate();
+	window.requestAnimationFrame(step);
 }
 
 function processData(data, tt) {
@@ -278,35 +284,19 @@ function processData(data, tt) {
 	xGrid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	// var currentData = data[1].filter(quake => quake.time <= timeElapsed);
-	// currentData.forEach(function(quake){
-	// 	if (quake.time < timeElapsed) {
-	// 		quake.expired = true;
-	// 	}
-	// });
-	// console.log(currentData);
-	// var points = viz.selectAll('circle').data(currentData, key);
-	var points = viz.selectAll('circle').data(data[1], key);
+	// Filter data based on time/progress, building array over time
+	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(progress));
+	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
-			.attr('class', function(d){
-				var classStr = '_3d quake-point';
-				if (d.expired) {
-					console.log('expired');
-					classStr += ' expired'
-				}
-				return classStr
-			})
-			// .attr('opacity', 1)
+			.attr('class', '_3d quake-point')
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
-			.merge(points)
-			// .transition().duration(tt)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
 				return scale2d.color(scale2d.depth.invert(d.y));
 			})
-			.attr('opacity', 0)
+			.merge(points)
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
 
@@ -436,7 +426,6 @@ function dragged(){
 	orbit.beta   = (d3.event.x - orbit.mx + orbit.mouseX) * Math.PI / 230 ;
 	orbit.alpha  = (d3.event.y - orbit.my + orbit.mouseY) * Math.PI / 230  * (-1);
 	updateDataArray();
-	processData(data, 0);
 }
 
 function updateDataArray() {
@@ -452,6 +441,7 @@ function updateDataArray() {
 		axes,
 		fault
 	];
+	processData(data, 0);
 }
 
 function dragEnd(){
@@ -465,10 +455,15 @@ function dragEnd(){
 var magInput = document.querySelector('#magInput');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
+var btnReplay = document.querySelector('#btnReplay');
 var toggleRanges = document.querySelectorAll('[data-range]');
 
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
+
+btnReplay.addEventListener('click', function(){
+	init(0);
+});
 
 magInput.addEventListener('change', function(e){
 	fetchQuakeData(magInput.value);
@@ -500,7 +495,6 @@ function rBottom() {
 	orbit.alpha  = 1.6937282132397145;
 	orbit.beta   = -0.6283185307179586;
 	updateDataArray();
-	processData(data, 0);
 }
 
 //Quick debug to rotate to visual bottom
@@ -508,7 +502,6 @@ function rFront() {
 	orbit.alpha  = 0.12293188644481799;
 	orbit.beta   = -0.6283185307179586;
 	updateDataArray();
-	processData(data, 0);
 }
 
 //Data fetch
