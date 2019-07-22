@@ -13,6 +13,8 @@ var quakeData,
 	targetMag,
 	magFloor,
 	viz,
+	timeline,
+	playhead,
 	grid3d,
 	point3d;
 
@@ -94,6 +96,7 @@ function step(timestamp) {
 	if (!start) start = timestamp;
 		progress = timestamp - start;
 		updateDataArray();
+		movePlayhead();
 	if (progress < endtime) {
 		window.requestAnimationFrame(step);
 	}
@@ -136,6 +139,11 @@ function init(dur) {
 
 	viz = svg.append('g')
 				.attr('id', 'viz');
+
+	timeline = svg.append('g')
+			.attr('id', 'timeline')
+			.attr("transform", "translate(0," + (height - 200) + ")")
+	timelinePlayback(width);
 
 	grid3d = d3._3d()
 		.shape('GRID', j*2)
@@ -215,6 +223,8 @@ function init(dur) {
 	scale2d.time = d3.scaleLinear()
 		.domain([timeFloor, timeCeil])
 		.range([0, endtime]);
+
+
 
 	//Build scale for depth
 	var yScaleMin = 0;
@@ -409,6 +419,40 @@ function processData(data, tt) {
 	zText.exit().remove();
 
 	d3.selectAll('._3d').sort(d3._3d().sort);
+}
+
+
+function timelinePlayback(width) {
+	var timelinePadding = 200;
+	scale2d.timeline = d3.scaleLinear()
+		.domain([timeFloor/60, timeCeil/60])
+		.range([timelinePadding, width - timelinePadding]);
+
+	var axisTime = d3.axisBottom(scale2d.timeline);
+	timeline.append('text')
+				.text('Minutes from primary event')
+				.attr('x', width / 2)
+				.attr('y', '50')
+				.attr('text-anchor', 'middle')
+	timeline.append('g')
+			.attr("id", "timeAxis")
+			.call(axisTime);
+
+	playhead = timeline.append('g')
+							.attr('id', 'playhead')
+
+	var playheadW = 10;
+	playhead.append('rect')
+			.attr('id', 'playheadGrip')
+			.attr('x', timelinePadding - (playheadW/2))
+			.attr('y', -40)
+			.attr('height', 20)
+			.attr('width', playheadW)
+}
+
+function movePlayhead(){
+	// console.log(progress);
+	playhead.attr('transform', 'translate(' + scale2d.time(progress) + ', 0)')
 }
 
 function posPointX(d) { return d.projected.x; }
