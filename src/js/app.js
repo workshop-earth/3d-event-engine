@@ -466,6 +466,7 @@ btnReplay.addEventListener('click', function(){
 });
 
 magInput.addEventListener('change', function(e){
+	if (magInput.value < magInput.min) { magInput.value = magInput.min; }
 	fetchQuakeData(magInput.value);
 });
 
