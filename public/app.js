@@ -328,7 +328,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Y labels
-				return (Math.round(scale2d.depth.invert(d[1]) / 1000 * 10) / 10);
+				return -(Math.round(scale2d.depth.invert(d[1]) / 1000 * 10) / 10);
 			});
 
 	yText.exit().remove();
@@ -338,7 +338,6 @@ function processData(data, tt) {
 		// Should remove all calculations if we don't want to display
 	/* ----------- x-Scale Text ----------- */
 	var xText = viz.selectAll('text.xText').data(data[2].x[0]);
-
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
@@ -363,7 +362,6 @@ function processData(data, tt) {
 			});
 
 	xText.exit().remove();
-
 
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
