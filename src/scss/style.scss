@@ -47,25 +47,29 @@ path, line {
 	stroke: black;
 	stroke-opacity: 0.2;
 	stroke-width: 0.4;
-	// &.yDash {
-	// 	stroke: black;
-	// 	stroke-opacity: 0.4;
-	// 	fill: transparent;
-	// }
 }
+
+.timeline-baseline {
+	stroke-width: 1;
+	stroke-opacity: 1;
+}
+
+// .playhead {
+// 	&-grip {
+// 		fill: salmon;
+// 	}
+// }
 
 text {
 	fill: black;
 	fill-opacity: 0.4;
 	font-size: 13px;
-	// font-family: 'Helvetica Nueue',  Helvetica, Arial, sans-serif;
 }
 
 .fault {
 	fill: black;
 	fill-opacity: 0.03;
 }
-
 
 .key,
 .ui {
