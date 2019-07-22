@@ -9,7 +9,6 @@ var j = 6.5,
 // Uninitialized variables
 var quakeData,
 	data,
-	maxTime,
 	targetMag,
 	magFloor,
 	viz,
@@ -20,7 +19,7 @@ var scale2d = {
 	x: null,
 	z: null,
 	depth: null,
-	color: null,
+	time: null,
 	mag: null
 }
 
@@ -52,11 +51,12 @@ function generateBounds() {
 
 	yFloor = d3.min(quakeData, function(d) { return + d.y;});
 	yCeil = d3.max(quakeData, function(d) { return + d.y;});
-		
+
 	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
 	magCeil = d3.max(quakeData, function(d) { return + d.mag;});
 
-	maxTime = d3.max(quakeData, function(d) { return + d.time;});
+	timeFloor = d3.min(quakeData, function(d) { return + d.time;});
+	timeCeil = d3.max(quakeData, function(d) { return + d.time;});
 
 	absX = Math.abs(xFloor - xCeil);
 	absZ = Math.abs(zFloor - zCeil);
@@ -84,21 +84,6 @@ function debounce(func, wait, immediate) {
 	};
 };
 
-
-var updateInterval;
-function animate(){
-	updateInterval = setInterval(updateDataset, 100);
-}
-function updateDataset() {
-	updateDataArray();
-	processData(data, 0);
-	timeElapsed++;
-	console.log(timeElapsed);
-	if (timeElapsed >= maxTime) {
-		clearInterval(updateInterval);
-	}
-}
-
 // Re-initialize visualization on window resize (debounced)
 window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
 
@@ -112,8 +97,8 @@ function init(dur) {
 	//Little bit of magic to get best visual center, offset 300px from top
 	var origin = [width/1.86, 300],
 		cnt = 0,
-		colorScaleLight = "#FFE933",
-		colorScaleDark = "#D60041";
+		colorScaleLight = "#FFE933", //Newer
+		colorScaleDark = "#D60041"; //Older
 
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
@@ -205,8 +190,8 @@ function init(dur) {
 		.domain([yFloor, yCeil])
 		.range([yScaleMin, yScaleMax]);
 
-	scale2d.color = d3.scaleLinear()
-		.domain([yFloor, yCeil])
+	scale2d.time = d3.scaleLinear()
+		.domain([timeFloor, timeCeil])
 		.range([colorScaleLight, colorScaleDark]);
 
 	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [];
@@ -244,7 +229,6 @@ function init(dur) {
 
 	updateDataArray();
 	processData(data, dur);
-	// animate();
 }
 
 function processData(data, tt) {
@@ -289,7 +273,7 @@ function processData(data, tt) {
 			// .transition().duration(tt)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
-				return scale2d.color(scale2d.depth.invert(d.y));
+				return scale2d.time(d.time);
 			})
 			.attr('opacity', 0)
 			.attr('cx', posPointX)

@@ -110,6 +110,26 @@ text {
 	left: 0;
 	span {
 		font-size: 0.75rem;
+		&.color-range {
+			display: block;
+			margin-top: 0.2rem;
+			&-circle {
+				display: inline-block;
+				border-radius: 100px;
+				height: 1rem;
+				width: 1rem;
+				position: relative;
+				top: 0.25rem;
+				&.older {
+					background-color: #D60041;
+					border: 1px solid #333;
+				}
+				&.newer {
+					background-color: #FFE933;
+					border: 1px solid #333;
+				}
+			}
+		}
 	}
 }
 
