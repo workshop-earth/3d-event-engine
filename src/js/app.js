@@ -8,6 +8,7 @@ var j = 6.5,
 
 // Uninitialized variables
 var quakeData,
+	faultData,
 	data,
 	maxTime,
 	targetMag,
@@ -52,7 +53,7 @@ function generateBounds() {
 
 	yFloor = d3.min(quakeData, function(d) { return + d.y;});
 	yCeil = d3.max(quakeData, function(d) { return + d.y;});
-		
+
 	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
 	magCeil = d3.max(quakeData, function(d) { return + d.mag;});
 
@@ -182,6 +183,14 @@ function init(dur) {
 			return scale2d.depth(0)
 		});
 
+	scale3d.fault = d3._3d()
+		.shape('PLANE')
+		.origin(origin)
+		.rotateY( startAngleY)
+		.rotateX( startAngleX)
+		.scale(scale)
+		.rotateCenter(rotateCenter)
+
 
 	scale2d.x = d3.scaleLinear()
 		.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
@@ -209,7 +218,7 @@ function init(dur) {
 		.domain([yFloor, yCeil])
 		.range([colorScaleLight, colorScaleDark]);
 
-	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [];
+	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
 	for(var z = -j; z < j; z++){
 		for(var x = -j; x < j; x++){
 			xGrid.push([x, 1, z]);
@@ -241,6 +250,12 @@ function init(dur) {
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
+
+	// **TODO: Get real fault data into fault-data.json
+	faultData.forEach(function(point){
+		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
+		faultPlane.push(arr);
+	});
 
 	updateDataArray();
 	processData(data, dur);
@@ -297,6 +312,15 @@ function processData(data, tt) {
 
 	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
 
+	/* ----------- Fault Plane ----------- */
+	var faultPlane = viz.selectAll('path.fault').data(data[3]);
+	faultPlane.enter()
+			.append('path')
+			.attr('class', '_3d fault')
+			.merge(faultPlane)
+			.attr('d', scale3d.fault.draw);
+
+	faultPlane.exit().remove();
 
 	/* ----------- y-Scale ----------- */
 	var yScale = viz.selectAll('path.yScale').data(data[2].y);
@@ -338,6 +362,7 @@ function processData(data, tt) {
 		// Should remove all calculations if we don't want to display
 	/* ----------- x-Scale Text ----------- */
 	var xText = viz.selectAll('text.xText').data(data[2].x[0]);
+
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
@@ -420,10 +445,12 @@ function updateDataArray() {
 		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([yLine]),
 		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([zLine])
 	};
+	var fault = scale3d.fault.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([faultPlane])
 	data = [
 		grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(xGrid),
 		point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(scatter),
-		axes
+		axes,
+		fault
 	];
 }
 
@@ -444,7 +471,7 @@ btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 
 magInput.addEventListener('change', function(e){
-	fetchData(magInput.value);
+	fetchQuakeData(magInput.value);
 });
 
 toggleRanges.forEach(function(range){
@@ -485,16 +512,15 @@ function rFront() {
 }
 
 //Data fetch
-fetchData(magInput.value);
-function fetchData(targetMag){
+fetchQuakeData(magInput.value);
+function fetchQuakeData(targetMag){
 	var request	= new XMLHttpRequest(),
 			datapath	= './data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
-			console.log('Data received');
+			console.log('Quake data received');
 			quakeData = JSON.parse(request.responseText).quakes;
-
 			// Get max/min bounds for all datapoints from full dataset
 			generateBounds();
 
@@ -503,9 +529,29 @@ function fetchData(targetMag){
 				return quake.mag >= targetMag;
 			});
 
+
+			fetchFaultData();
+		} else { console.log('Reached our target server, but it returned an error'); }
+	};
+	request.onerror = function() { console.log('There was a connection error of some sort'); };
+	request.send();
+}
+
+
+function fetchFaultData(targetMag){
+	var request	= new XMLHttpRequest(),
+			datapath	= './fault-data.json';
+	request.open('GET', datapath, true);
+	request.onload = function() {
+		if (request.status >= 200 && request.status < 400) {
+			console.log('Fault data received');
+			faultData = JSON.parse(request.responseText).fault;
+
 			if (quakeData.length > 1) {
 				init(1000);
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
+
+
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
 	request.onerror = function() { console.log('There was a connection error of some sort'); };
