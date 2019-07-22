@@ -471,6 +471,7 @@ btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 
 magInput.addEventListener('change', function(e){
+	if (magInput.value < magInput.min) { magInput.value = magInput.min; }
 	fetchQuakeData(magInput.value);
 });
 
