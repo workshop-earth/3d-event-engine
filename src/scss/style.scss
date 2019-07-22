@@ -32,11 +32,6 @@ circle {
 	&.quake-point {
 		stroke-width: 1;
 		stroke: #333;
-		// &.expired {
-		// 	stroke: red;
-		// }
-		opacity: 1;
-		transition: opacity 1s;
 	}
 }
 
@@ -106,6 +101,16 @@ text {
 		}
 		&:not(:last-child) {
 			margin-bottom: 1rem;
+		}
+	}
+	.buttons {
+		width: 100%;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		button {
+			flex-basis: 48%;
+			margin-bottom: 0.6rem;
 		}
 	}
 }
