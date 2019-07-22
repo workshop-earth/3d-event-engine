@@ -24,11 +24,12 @@ gulp.task('css', function(){
 gulp.task('watch', function(){
     gulp.watch('src/js/app.js', ['js']);
     gulp.watch('src/scss/style.scss', ['css']);
-    gulp.watch('data/data.json', ['build']);
+    gulp.watch('data/*', ['build']);
 });
 
 gulp.task('data', function(){
-    return gulp.src('data/data.json')
+    return gulp.src(['data/data.json',
+                     'data/fault-data.json'])
         .pipe(gulp.dest('public'));
 });
 
