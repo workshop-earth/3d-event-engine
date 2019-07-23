@@ -203,20 +203,17 @@ function sizeScale() {
 	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	scale	= Math.min(width * 0.045, 50);
 
-	//Little bit of magic to get best visual center, offset 300px from top
-	origin = [width/1.86, 300];
+	//Little bit of magic to get best visual center
+	origin = [width/2, height/3.25];
 
 	// Programmatically rotate around centerpoint of dynamic grid
-	// **TODO: Extend this for X/Z axes as well
-	rotateCenter = [-1, (yScaleMax / 2) ,0];
+	rotateCenter = [0, (yScaleMax / 2) ,0];
 
 	svg.attr('height', height)
 			.attr('width', width)
 
 	vizTarget.attr('height', height)
 					.attr('width', width)
-
-	timeline.attr("transform", "translate(0," + (height - 200) + ")")
 
 	grid3d = d3._3d()
 		.shape('GRID', j*2)
@@ -296,9 +293,12 @@ function sizeScale() {
 
 	var axisTime = d3.axisBottom(scale2d.timeline);
 	var timelinebgPad = timelinePadding * 0.2;
+	var timelineH = 125;
 
+	timeline.attr("transform", "translate(0," + (height - timelineH) + ")");
 	timelineBG.attr('x', timelinePadding - timelinebgPad)
-						.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2));
+						.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2))
+						.attr('height', timelineH);
 
 	timelineLabel.attr('x', width / 2);
 
@@ -456,7 +456,6 @@ function timelinePlayback() {
 		// Sizing/scaling handled on resize
 	timelineBG = timeline.append('rect')
 			.attr('y', -35)
-			.attr('height', 100)
 			.attr('class', 'timeline-bg')
 	timelineLabel = timeline.append('text')
 			.text('Hours from primary event')
