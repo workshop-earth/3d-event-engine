@@ -32,11 +32,6 @@ circle {
 	&.quake-point {
 		stroke-width: 1;
 		stroke: #333;
-		// &.expired {
-		// 	stroke: red;
-		// }
-		opacity: 1;
-		transition: opacity 1s;
 	}
 }
 
@@ -52,25 +47,43 @@ path, line {
 	stroke: black;
 	stroke-opacity: 0.2;
 	stroke-width: 0.4;
-	// &.yDash {
-	// 	stroke: black;
-	// 	stroke-opacity: 0.4;
-	// 	fill: transparent;
-	// }
+}
+
+.viz-hit,
+.timeline-bg {
+	fill: transparent;
+}
+
+.timeline-baseline {
+	stroke-width: 1;
+	stroke-opacity: 1;
+}
+
+.playhead {
+	&-body {
+		fill: white;
+		fill-opacity: 1;
+	}
+	&-body,
+	&-stroke {
+		stroke-opacity: 1;
+	}
 }
 
 text {
 	fill: black;
 	fill-opacity: 0.4;
 	font-size: 13px;
-	// font-family: 'Helvetica Nueue',  Helvetica, Arial, sans-serif;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .fault {
 	fill: black;
 	fill-opacity: 0.03;
 }
-
 
 .key,
 .ui {
@@ -106,6 +119,16 @@ text {
 		}
 		&:not(:last-child) {
 			margin-bottom: 1rem;
+		}
+	}
+	.buttons {
+		width: 100%;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		button {
+			flex-basis: 48%;
+			margin-bottom: 0.6rem;
 		}
 	}
 }
