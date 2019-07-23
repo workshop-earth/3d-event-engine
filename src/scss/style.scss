@@ -54,11 +54,16 @@ path, line {
 	stroke-opacity: 1;
 }
 
-// .playhead {
-// 	&-grip {
-// 		fill: salmon;
-// 	}
-// }
+.playhead {
+	&-body {
+		fill: white;
+		fill-opacity: 1;
+	}
+	&-body,
+	&-stroke {
+		stroke-opacity: 1;
+	}
+}
 
 text {
 	fill: black;
