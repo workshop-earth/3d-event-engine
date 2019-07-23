@@ -4,7 +4,8 @@ var j = 6.5,
 	startAngle = Math.PI/5,
 	startAngleY = startAngle,
 	startAngleX = -startAngle / 5,
-	timeUnit = 1/60/60; // Convert playback scale to hours
+	timeUnit = 1/60/60, // Convert playback scale to hours
+	bgAppended = false;
 
 // Uninitialized variables
 var quakeData,
@@ -113,9 +114,9 @@ function init(dur) {
 	progress = null;
 
 	var vizHolder	= document.querySelector('#vizHolder'),
-		durAnimIn = dur,
-		height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+		durAnimIn = dur;
 
+	height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 	var	scale	= Math.min(width * 0.045, 50);
 
@@ -138,7 +139,6 @@ function init(dur) {
 				.append('svg')
 				.attr('height', height)
 				.attr('width', width)
-				.call(d3.drag().on('drag', dragged).on('start', dragStart).on('end', dragEnd))
 
 	viz = svg.append('g')
 				.attr('id', 'viz');
@@ -277,6 +277,8 @@ function init(dur) {
 		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
 		faultPlane.push(arr);
 	});
+
+
 
 	window.requestAnimationFrame(step);
 }
@@ -422,6 +424,24 @@ function processData(data, tt) {
 	zText.exit().remove();
 
 	d3.selectAll('._3d').sort(d3._3d().sort);
+
+	// Apply orbit controls to an overlay for better UI with playhead controls
+		// Has to happen after grid is drawn
+		// Just do it once since grid draws every frame
+	if (!bgAppended) {
+		viz.append('rect')
+		.attr('x', 0)
+		.attr('y', 0)
+		.attr('height', height)
+		.attr('width', width)
+		.attr('class', 'viz-hit')
+		.call(d3.drag()
+			.on('drag', dragged)
+			.on('start', dragStart)
+			.on('end', dragEnd));
+
+		bgAppended = true;
+	}
 }
 
 
@@ -432,6 +452,13 @@ function timelinePlayback(width) {
 		.range([0, width - timelinePadding * 2]);
 
 	var axisTime = d3.axisBottom(scale2d.timeline);
+	var timelinebgPad = timelinePadding * 0.2;
+	timeline.append('rect')
+			.attr('x', timelinePadding - timelinebgPad)
+			.attr('y', -35)
+			.attr('height', 100)
+			.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2))
+			.attr('class', 'timeline-bg')
 	timeline.append('text')
 				.text('Hours from primary event')
 				.attr('x', width / 2)

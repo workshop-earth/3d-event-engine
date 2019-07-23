@@ -49,6 +49,11 @@ path, line {
 	stroke-width: 0.4;
 }
 
+.viz-hit,
+.timeline-bg {
+	fill: transparent;
+}
+
 .timeline-baseline {
 	stroke-width: 1;
 	stroke-opacity: 1;
@@ -69,6 +74,10 @@ text {
 	fill: black;
 	fill-opacity: 0.4;
 	font-size: 13px;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 .fault {
