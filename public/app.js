@@ -4,8 +4,7 @@ var j = 6.5,
 	startAngle = Math.PI/5,
 	startAngleY = startAngle,
 	startAngleX = -startAngle / 5,
-	timeUnit = 1/60/60, // Convert playback scale to hours
-	bgAppended = false;
+	timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
 var quakeData,
@@ -13,12 +12,10 @@ var quakeData,
 	data,
 	targetMag,
 	magFloor,
-	viz,
 	timeline,
 	playhead,
 	grid3d,
-	point3d,
-	width;
+	point3d;
 
 var scale2d = {
 	x: null,
@@ -105,48 +102,121 @@ function step(timestamp) {
 	}
 }
 
+// Rerun sizeing/scaling on window resize (debounced)
+window.addEventListener('resize', debounce( function(){ sizeScale(); } ), 250);
 
-// Re-initialize visualization on window resize (debounced)
-window.addEventListener('resize', debounce( function(){ init(0); } ), 250);
-
-function init(dur) {
+function init() {
 	start = null;
 	progress = null;
 
-	var vizHolder	= document.querySelector('#vizHolder'),
-		durAnimIn = dur;
+	var vizHolder	= document.querySelector('#vizHolder');
 
-	height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	var	scale	= Math.min(width * 0.045, 50);
-
-	//Little bit of magic to get best visual center, offset 300px from top
-	var origin = [width/1.86, 300],
-		cnt = 0,
-		colorScaleLight = "#FFE933",
-		colorScaleDark = "#D60041";
+	var	cnt = 0,
+			colorScaleLight = "#FFE933",
+			colorScaleDark = "#D60041";
 
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
 
 	targetMag = d3.min(quakeData, function(d) { return + d.mag;});
 
-	// Programmatically rotate around centerpoint of dynamic grid
-		// **TODO: Extend this for X/Z axes as well
-	var rotateCenter = [-1, (yScaleMax / 2) ,0];
-
-	var svg = d3.select(vizHolder)
+	svg = d3.select(vizHolder)
 				.append('svg')
-				.attr('height', height)
-				.attr('width', width)
 
 	viz = svg.append('g')
 				.attr('id', 'viz');
 
+	// Apply orbit controls to an overlay for better UI with playhead controls
+	vizTarget = svg.append('rect')
+		.attr('x', 0)
+		.attr('y', 0)
+		.attr('class', 'viz-hit')
+		.call(d3.drag()
+			.on('drag', dragged)
+			.on('start', dragStart)
+			.on('end', dragEnd));
+
 	timeline = svg.append('g')
 			.attr('id', 'timeline')
-			.attr("transform", "translate(0," + (height - 200) + ")")
-	timelinePlayback(width);
+
+	timelinePlayback();
+	sizeScale();
+
+	// Set scales which are independent from viz size
+		// Color/Time/Depth
+	scale2d.color = d3.scaleLinear()
+		.domain([yFloor, yCeil])
+		.range([colorScaleLight, colorScaleDark]);
+
+	scale2d.time = d3.scaleLinear()
+		.domain([timeFloor, timeCeil])
+		.range([0, endtime]);
+
+	yScaleMin = 0;
+	scale2d.depth = d3.scaleLinear()
+		.domain([yFloor, yCeil])
+		.range([yScaleMin, yScaleMax]);
+
+	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
+	for(var z = -j; z < j; z++){
+		for(var x = -j; x < j; x++){
+			xGrid.push([x, 1, z]);
+			while (cnt < quakeData.length) {
+				scatter.push({
+					x:		scale2d.x(quakeData[cnt].x),
+					y:		scale2d.depth(quakeData[cnt].y),
+					z:		scale2d.z(quakeData[cnt].z),
+					mag:	quakeData[cnt].mag,
+					time: quakeData[cnt].time,
+					id:		'point_' + cnt++
+				});
+			}
+		}
+	}
+
+	var yScaleBuffer	= 0.75;
+	d3.range(yScaleMin, yScaleMax + yScaleBuffer, 0.8)
+		.forEach(function(d) {
+			yLine.push([-j, d, -j]);
+		});
+
+	d3.range(scale2d.x(xFloor), scale2d.x(xCeil), 1)
+		.forEach(function(d) {
+			xLine.push([d, 0, -j]);
+		});
+
+	d3.range(scale2d.z(zFloor), scale2d.z(zCeil), 1)
+		.forEach(function(d) {
+			zLine.push([-j, 0, d]);
+		});
+
+	// **TODO: Get real fault data into fault-data.json
+	faultData.forEach(function(point){
+		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
+		faultPlane.push(arr);
+	});
+}
+
+
+function sizeScale() {
+	height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	scale	= Math.min(width * 0.045, 50);
+
+	//Little bit of magic to get best visual center, offset 300px from top
+	origin = [width/1.86, 300];
+
+	// Programmatically rotate around centerpoint of dynamic grid
+	// **TODO: Extend this for X/Z axes as well
+	rotateCenter = [-1, (yScaleMax / 2) ,0];
+
+	svg.attr('height', height)
+			.attr('width', width)
+
+	vizTarget.attr('height', height)
+					.attr('width', width)
+
+	timeline.attr("transform", "translate(0," + (height - 200) + ")")
 
 	grid3d = d3._3d()
 		.shape('GRID', j*2)
@@ -205,7 +275,6 @@ function init(dur) {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 
-
 	scale2d.x = d3.scaleLinear()
 		.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
 		.range([-j, j - 1]);
@@ -214,71 +283,27 @@ function init(dur) {
 		.domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer])
 		.range([-j, j - 1]);
 
-
-
-	//Modify outpute range of radii based on viewport size
-	var magModifier = scale / 50;
+	//Modify output range of radii based on viewport size
+	magModifier = scale / 50;
 	scale2d.mag = d3.scaleLinear()
 		.domain([magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
 
+	timelinePadding = width * .1;
+	scale2d.timeline = d3.scaleLinear()
+		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
+		.range([0, width - timelinePadding * 2]);
 
-	scale2d.time = d3.scaleLinear()
-		.domain([timeFloor, timeCeil])
-		.range([0, endtime]);
+	var axisTime = d3.axisBottom(scale2d.timeline);
+	var timelinebgPad = timelinePadding * 0.2;
 
+	timelineBG.attr('x', timelinePadding - timelinebgPad)
+						.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2));
 
+	timelineLabel.attr('x', width / 2);
 
-	//Build scale for depth
-	var yScaleMin = 0;
-	scale2d.depth = d3.scaleLinear()
-		.domain([yFloor, yCeil])
-		.range([yScaleMin, yScaleMax]);
-
-	scale2d.color = d3.scaleLinear()
-		.domain([yFloor, yCeil])
-		.range([colorScaleLight, colorScaleDark]);
-
-	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
-	for(var z = -j; z < j; z++){
-		for(var x = -j; x < j; x++){
-			xGrid.push([x, 1, z]);
-			while (cnt < quakeData.length) {
-				scatter.push({
-					x:		scale2d.x(quakeData[cnt].x),
-					y:		scale2d.depth(quakeData[cnt].y),
-					z:		scale2d.z(quakeData[cnt].z),
-					mag:	quakeData[cnt].mag,
-					time: quakeData[cnt].time,
-					id:		'point_' + cnt++
-				});
-			}
-		}
-	}
-
-	var yScaleBuffer	= 0.75;
-	d3.range(yScaleMin, yScaleMax + yScaleBuffer, 0.8)
-		.forEach(function(d) {
-			yLine.push([-j, d, -j]);
-		});
-
-	d3.range(scale2d.x(xFloor), scale2d.x(xCeil), 1)
-		.forEach(function(d) {
-			xLine.push([d, 0, -j]);
-		});
-
-	d3.range(scale2d.z(zFloor), scale2d.z(zCeil), 1)
-		.forEach(function(d) {
-			zLine.push([-j, 0, d]);
-		});
-
-	// **TODO: Get real fault data into fault-data.json
-	faultData.forEach(function(point){
-		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
-		faultPlane.push(arr);
-	});
-
-
+	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
+							.call(axisTime);
 
 	window.requestAnimationFrame(step);
 }
@@ -294,7 +319,6 @@ function processData(data, tt) {
 			.attr('class', '_3d grid grid-panel')
 			.merge(xGrid)
 			.attr('d', grid3d.draw);
-
 
 	xGrid.exit().remove();
 
@@ -424,53 +448,25 @@ function processData(data, tt) {
 	zText.exit().remove();
 
 	d3.selectAll('._3d').sort(d3._3d().sort);
-
-	// Apply orbit controls to an overlay for better UI with playhead controls
-		// Has to happen after grid is drawn
-		// Just do it once since grid draws every frame
-	if (!bgAppended) {
-		viz.append('rect')
-		.attr('x', 0)
-		.attr('y', 0)
-		.attr('height', height)
-		.attr('width', width)
-		.attr('class', 'viz-hit')
-		.call(d3.drag()
-			.on('drag', dragged)
-			.on('start', dragStart)
-			.on('end', dragEnd));
-
-		bgAppended = true;
-	}
 }
 
 
-function timelinePlayback(width) {
-	timelinePadding = width * .1;
-	scale2d.timeline = d3.scaleLinear()
-		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
-		.range([0, width - timelinePadding * 2]);
-
-	var axisTime = d3.axisBottom(scale2d.timeline);
-	var timelinebgPad = timelinePadding * 0.2;
-	timeline.append('rect')
-			.attr('x', timelinePadding - timelinebgPad)
+function timelinePlayback() {
+	// Initialize the timeline component
+		// Sizing/scaling handled on resize
+	timelineBG = timeline.append('rect')
 			.attr('y', -35)
 			.attr('height', 100)
-			.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2))
 			.attr('class', 'timeline-bg')
-	timeline.append('text')
-				.text('Hours from primary event')
-				.attr('x', width / 2)
-				.attr('y', '50')
-				.attr('text-anchor', 'middle')
-	timeline.append('g')
+	timelineLabel = timeline.append('text')
+			.text('Hours from primary event')
+			.attr('y', '50')
+			.attr('text-anchor', 'middle')
+	timelineAxis = timeline.append('g')
 			.attr("id", "timeAxis")
-			.attr('transform', 'translate(' + timelinePadding + ', 0)')
-			.call(axisTime);
 
 	playhead = timeline.append('g')
-							.attr('id', 'playhead')
+					.attr('id', 'playhead')
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
 	playhead.append('path').attr('d', 'M3,7.5H7')
@@ -540,7 +536,7 @@ btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 
 btnReplay.addEventListener('click', function(){
-	init(0);
+	init();
 });
 
 magInput.addEventListener('change', function(e){
@@ -620,7 +616,7 @@ function fetchFaultData(targetMag){
 			faultData = JSON.parse(request.responseText).fault;
 
 			if (quakeData.length > 1) {
-				init(1000);
+				init();
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
 
 
