@@ -4,7 +4,7 @@ var j = 6.5,
 	startAngle = Math.PI/5,
 	startAngleY = startAngle,
 	startAngleX = -startAngle / 5,
-	timeElapsed = 0;
+	timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
 var quakeData,
@@ -16,7 +16,8 @@ var quakeData,
 	timeline,
 	playhead,
 	grid3d,
-	point3d;
+	point3d,
+	width;
 
 var scale2d = {
 	x: null,
@@ -95,6 +96,7 @@ var endtime = 20000;
 function step(timestamp) {
 	if (!start) start = timestamp;
 		progress = timestamp - start;
+		// console.log(progress);
 		updateDataArray();
 		movePlayhead();
 	if (progress < endtime) {
@@ -112,9 +114,10 @@ function init(dur) {
 
 	var vizHolder	= document.querySelector('#vizHolder'),
 		durAnimIn = dur,
-		height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-		width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0),
-		scale	= Math.min(width * 0.045, 50);
+		height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	var	scale	= Math.min(width * 0.045, 50);
 
 	//Little bit of magic to get best visual center, offset 300px from top
 	var origin = [width/1.86, 300],
@@ -423,36 +426,40 @@ function processData(data, tt) {
 
 
 function timelinePlayback(width) {
-	var timelinePadding = 200;
+	timelinePadding = width * .1;
 	scale2d.timeline = d3.scaleLinear()
-		.domain([timeFloor/60, timeCeil/60])
-		.range([timelinePadding, width - timelinePadding]);
+		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
+		.range([0, width - timelinePadding * 2]);
 
 	var axisTime = d3.axisBottom(scale2d.timeline);
 	timeline.append('text')
-				.text('Minutes from primary event')
+				.text('Hours from primary event')
 				.attr('x', width / 2)
 				.attr('y', '50')
 				.attr('text-anchor', 'middle')
 	timeline.append('g')
 			.attr("id", "timeAxis")
+			.attr('transform', 'translate(' + timelinePadding + ', 0)')
 			.call(axisTime);
 
 	playhead = timeline.append('g')
 							.attr('id', 'playhead')
-
-	var playheadW = 10;
-	playhead.append('rect')
-			.attr('id', 'playheadGrip')
-			.attr('x', timelinePadding - (playheadW/2))
-			.attr('y', -40)
-			.attr('height', 20)
-			.attr('width', playheadW)
+	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
+					.attr('class', 'playhead-body')
+	playhead.append('path').attr('d', 'M3,7.5H7')
+					.attr('class', 'playhead-stroke')
+	playhead.append('path').attr('d', 'M3,9.5H7')
+					.attr('class', 'playhead-stroke')
+	playhead.append('path').attr('d', 'M3,11.5H7')
+					.attr('class', 'playhead-stroke')
 }
 
 function movePlayhead(){
-	// console.log(progress);
-	playhead.attr('transform', 'translate(' + scale2d.time(progress) + ', 0)')
+	var playheadW = 10;
+	var hoursElapsed = scale2d.time.invert(progress) * timeUnit;
+	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
+	var playheadPosY = -30;
+	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')')
 }
 
 function posPointX(d) { return d.projected.x; }
