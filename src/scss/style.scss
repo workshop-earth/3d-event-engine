@@ -133,17 +133,34 @@ text {
 	}
 }
 
-
 .key {
 	left: 0;
 	span {
 		font-size: 0.75rem;
+		&.color-range {
+			display: block;
+			margin-top: 0.2rem;
+			&-circle {
+				display: inline-block;
+				border-radius: 100px;
+				height: 1rem;
+				width: 1rem;
+				position: relative;
+				top: 0.25rem;
+				border: 1px solid #333;
+				&.older {
+					background-color: #D60041;
+				}
+				&.middle {
+					background-color: #FFE933;
+				}
+				&.newer {
+					background-color: #8ded26;
+				}
+			}
+		}
 	}
 }
-
-
-
-
 
 
 
