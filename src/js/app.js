@@ -498,19 +498,6 @@ function posPointX(d) { return d.projected.x; }
 function posPointY(d) { return d.projected.y; }
 function magPoint (d) { return scale2d.mag(d.mag); }
 
-function dragStart(){
-	orbit.mx = d3.event.x;
-	orbit.my = d3.event.y;
-}
-
-function dragged(){
-	orbit.mouseX = orbit.mouseX || 0;
-	orbit.mouseY = orbit.mouseY || 0;
-	orbit.beta   = (d3.event.x - orbit.mx + orbit.mouseX) * Math.PI / 230 ;
-	orbit.alpha  = (d3.event.y - orbit.my + orbit.mouseY) * Math.PI / 230  * (-1);
-	updateDataArray();
-}
-
 function updateDataArray() {
 	var axes = {
 		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([xLine]),
@@ -527,13 +514,26 @@ function updateDataArray() {
 	processData(data, 0);
 }
 
+
+// UI Operations
+function dragStart(){
+	orbit.mx = d3.event.x;
+	orbit.my = d3.event.y;
+}
+
+function dragged(){
+	orbit.mouseX = orbit.mouseX || 0;
+	orbit.mouseY = orbit.mouseY || 0;
+	orbit.beta   = (d3.event.x - orbit.mx + orbit.mouseX) * Math.PI / 230 ;
+	orbit.alpha  = (d3.event.y - orbit.my + orbit.mouseY) * Math.PI / 230  * (-1);
+	updateDataArray();
+}
+
 function dragEnd(){
 	orbit.mouseX = d3.event.x - orbit.mx + orbit.mouseX;
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
-
-// UI Operations
 var magInput = document.querySelector('#magInput');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
