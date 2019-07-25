@@ -90,17 +90,19 @@ function debounce(func, wait, immediate) {
 };
 
 
-var start = null;
-var progress = null;
-var endtime = 20000;
+var anim = {
+	'start': null,
+	'progress': null,
+	'endtime': 20000,
+	'req': null
+}
 function step(timestamp) {
-	if (!start) start = timestamp;
-		progress = timestamp - start;
-		// console.log(progress);
+	if (!anim.start) anim.start = timestamp;
+		anim.progress = timestamp - anim.start;
 		updateDataArray();
 		movePlayhead();
-	if (progress < endtime) {
-		window.requestAnimationFrame(step);
+	if (anim.progress < anim.endtime) {
+		anim.req = requestAnimationFrame(step);
 	}
 }
 
@@ -108,8 +110,12 @@ function step(timestamp) {
 window.addEventListener('resize', debounce( function(){ sizeScale(); } ), 250);
 
 function init() {
-	start = null;
-	progress = null;
+	// Kill existing RAF if restarting animation
+	if (anim.req != null) {
+		cancelAnimationFrame(anim.req);
+		anim.start = null;
+		anim.progress = null;
+	}
 
 	var vizHolder	= document.querySelector('#vizHolder');
 
@@ -153,7 +159,7 @@ function init() {
 
 	scale2d.time = d3.scaleLinear()
 		.domain([timeFloor, timeCeil])
-		.range([0, endtime]);
+		.range([0, anim.endtime]);
 
 	yScaleMin = 0;
 	scale2d.depth = d3.scaleLinear()
@@ -198,6 +204,9 @@ function init() {
 		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
 		faultPlane.push(arr);
 	});
+
+	// Start RAF loop
+	anim.req = requestAnimationFrame(step);
 }
 
 
@@ -307,8 +316,6 @@ function sizeScale() {
 
 	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
 							.call(axisTime);
-
-	window.requestAnimationFrame(step);
 }
 
 function processData(data, tt) {
@@ -327,7 +334,7 @@ function processData(data, tt) {
 
 	/* ----------- POINTS ----------- */
 	// Filter data based on time/progress, building array over time
-	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(progress));
+	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(anim.progress));
 	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
@@ -481,7 +488,7 @@ function initTimelineUI() {
 
 function movePlayhead(){
 	var playheadW = 10;
-	var hoursElapsed = scale2d.time.invert(progress) * timeUnit;
+	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
 	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
 	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')')
@@ -524,7 +531,6 @@ function dragEnd(){
 	orbit.mouseX = d3.event.x - orbit.mx + orbit.mouseX;
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
-
 
 
 // UI Operations
