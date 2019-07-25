@@ -69,6 +69,8 @@ function generateBounds() {
 	rangeYRatio = absY / largerAbs;
 	yScaleMax = (j * 2 - 1) * rangeYRatio;
 	gridEdgeBuffer = Math.max(xMean, zMean);
+
+	enableMagInput();
 }
 
 
@@ -539,10 +541,16 @@ btnReplay.addEventListener('click', function(){
 	init();
 });
 
-magInput.addEventListener('change', function(e){
-	if (magInput.value < magInput.min) { magInput.value = magInput.min; }
-	fetchQuakeData(magInput.value);
-});
+function enableMagInput() {
+	magInput.min = magFloor;
+	magInput.max = magCeil;
+	magInput.disabled = false;
+	magInput.addEventListener('change', function(e){
+		if (magInput.value < magInput.min) { magInput.value = magInput.min; }
+		fetchQuakeData(magInput.value);
+	});
+}
+
 
 toggleRanges.forEach(function(range){
 	range.addEventListener('change', function(e) {
