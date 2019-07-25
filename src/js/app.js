@@ -139,7 +139,7 @@ function init() {
 	timeline = svg.append('g')
 			.attr('id', 'timeline')
 
-	timelinePlayback();
+	initTimelineUI();
 	sizeScale();
 
 	// Set scales which are independent from viz size
@@ -451,7 +451,7 @@ function processData(data, tt) {
 }
 
 
-function timelinePlayback() {
+function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
 	timelineBG = timeline.append('rect')
