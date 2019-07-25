@@ -41,6 +41,12 @@ var orbit = {
 	mouseY: null
 }
 
+var scrub = {
+	startX: null,
+	newX: null,
+	delta: null
+}
+
 
 function generateBounds() {
 	xFloor = d3.min(quakeData, function(d) { return + d.x;});
@@ -476,6 +482,11 @@ function initTimelineUI() {
 
 	playhead = timeline.append('g')
 					.attr('id', 'playhead')
+					.call(d3.drag()
+						.on('drag', timeDragged)
+						.on('start', timeDragStart)
+						.on('end', timeDragEnd));
+
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
 	playhead.append('path').attr('d', 'M3,7.5H7')
@@ -516,6 +527,32 @@ function updateDataArray() {
 
 
 // UI Operations
+function timeDragStart(){
+	scrub.startX = d3.event.x;
+	console.log('drag started at: ' + scrub.startX);
+	cancelAnimationFrame(anim.req);
+}
+
+function timeDragged(){
+	// scrub.newX = d3.event.x;
+	// console.log('newX: ' + scrub.newX);
+	scrub.delta   = scrub.startX + d3.event.x;
+	console.log('delta: ' + scrub.delta);
+	// console.log(scrub.delta);
+	anim.progress = anim.progress + scale2d.timeline.invert(scrub.delta);
+	// anim.progress = anim.progress + scrub.delta;
+	// console.log(anim.progress);
+
+	updateDataArray();
+	movePlayhead();
+}
+
+function timeDragEnd(){
+	console.log('drag ended at: ' + d3.event.x);
+	// scrub.mouseX = d3.event.x - scrub.mx + scrub.mouseX;
+}
+
+
 function dragStart(){
 	orbit.mx = d3.event.x;
 	orbit.my = d3.event.y;
