@@ -112,7 +112,8 @@ function init() {
 	var vizHolder	= document.querySelector('#vizHolder');
 
 	var	cnt = 0,
-			colorScaleLight = "#FFE933",
+			colorScaleLight = '#8ded26',
+			colorScaleMid = "#FFE933",
 			colorScaleDark = "#D60041";
 
 	// Dump everything before initializing
@@ -145,8 +146,8 @@ function init() {
 	// Set scales which are independent from viz size
 		// Color/Time/Depth
 	scale2d.color = d3.scaleLinear()
-		.domain([yFloor, yCeil])
-		.range([colorScaleLight, colorScaleDark]);
+		.domain([timeFloor, d3.mean(quakeData, function(d) { return + d.time;}) , timeCeil])
+		.range([colorScaleDark, colorScaleMid, colorScaleLight]);
 
 	scale2d.time = d3.scaleLinear()
 		.domain([timeFloor, timeCeil])
@@ -333,7 +334,7 @@ function processData(data, tt) {
 			.attr('cy', posPointY)
 			.attr('r', magPoint)
 			.attr('fill', function(d){
-				return scale2d.color(scale2d.depth.invert(d.y));
+				return scale2d.color(d.time);
 			})
 			.merge(points)
 			.attr('cx', posPointX)
