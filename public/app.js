@@ -23,7 +23,8 @@ var scale2d = {
 	depth: null,
 	color: null,
 	mag: null,
-	time: null
+	time: null,
+	scrub: null
 }
 
 var scale3d = {
@@ -309,13 +310,17 @@ function sizeScale() {
 		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
 		.range([0, width - timelinePadding * 2]);
 
+	scale2d.scrub = d3.scaleLinear()
+		.domain([timelinePadding, width - timelinePadding])
+		.range([0, anim.endtime])
+		.clamp(true);
+
 	var axisTime = d3.axisBottom(scale2d.timeline);
-	var timelinebgPad = timelinePadding * 0.2;
 	var timelineH = 125;
 
 	timeline.attr("transform", "translate(0," + (height - timelineH) + ")");
-	timelineBG.attr('x', timelinePadding - timelinebgPad)
-						.attr('width', width - (timelinePadding * 2) + (timelinebgPad * 2))
+	timelineBG.attr('x', timelinePadding)
+						.attr('width', width - (timelinePadding * 2))
 						.attr('height', timelineH);
 
 	timelineLabel.attr('x', width / 2);
@@ -355,7 +360,7 @@ function processData(data, tt) {
 			.attr('cx', posPointX)
 			.attr('cy', posPointY);
 
-	points.exit().transition().style('opacity', 0).duration(250).delay(500).remove();
+	points.exit().remove();
 
 	/* ----------- Fault Plane ----------- */
 	var faultPlane = viz.selectAll('path.fault').data(data[3]);
@@ -473,6 +478,9 @@ function initTimelineUI() {
 	timelineBG = timeline.append('rect')
 			.attr('y', -35)
 			.attr('class', 'timeline-bg')
+			.call(d3.drag()
+						.on('drag', timeDragged)
+						.on('start', timeDragStart))
 	timelineLabel = timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
@@ -482,10 +490,6 @@ function initTimelineUI() {
 
 	playhead = timeline.append('g')
 					.attr('id', 'playhead')
-					.call(d3.drag()
-						.on('drag', timeDragged)
-						.on('start', timeDragStart)
-						.on('end', timeDragEnd));
 
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
@@ -528,28 +532,21 @@ function updateDataArray() {
 
 // UI Operations
 function timeDragStart(){
-	scrub.startX = d3.event.x;
-	console.log('drag started at: ' + scrub.startX);
 	cancelAnimationFrame(anim.req);
+	syncTimeline();
 }
 
 function timeDragged(){
-	// scrub.newX = d3.event.x;
-	// console.log('newX: ' + scrub.newX);
-	scrub.delta   = scrub.startX + d3.event.x;
-	console.log('delta: ' + scrub.delta);
-	// console.log(scrub.delta);
-	anim.progress = anim.progress + scale2d.timeline.invert(scrub.delta);
-	// anim.progress = anim.progress + scrub.delta;
-	// console.log(anim.progress);
+	syncTimeline();
+}
+
+function syncTimeline(){
+	scrub.startX = d3.event.x;
+	var newProg = scale2d.scrub(scrub.startX);
+	anim.progress = newProg;
 
 	updateDataArray();
 	movePlayhead();
-}
-
-function timeDragEnd(){
-	console.log('drag ended at: ' + d3.event.x);
-	// scrub.mouseX = d3.event.x - scrub.mx + scrub.mouseX;
 }
 
 
