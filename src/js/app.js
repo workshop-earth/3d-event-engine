@@ -370,6 +370,7 @@ function processData(data, tt) {
 	/* ----------- POINTS ----------- */
 	// Filter data based on time/progress, building array over time
 	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(anim.progress));
+	updateEventCount(currentData.length);
 	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
@@ -593,6 +594,7 @@ function dragEnd(){
 }
 
 var magInput = document.querySelector('#magInput');
+var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
 var btnReplay = document.querySelector('#btnReplay');
@@ -604,6 +606,10 @@ btnViewFront.addEventListener('click', rFront);
 btnReplay.addEventListener('click', function(){
 	init();
 });
+
+function updateEventCount(num) {
+	eventCount.textContent = num;
+}
 
 function enableMagInput() {
 	magInput.min = magFloor;
