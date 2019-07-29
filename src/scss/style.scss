@@ -1,6 +1,9 @@
 @import 'reset';
 
 $blue: #35a0f2;
+$yellow: #FFE933 ;
+$red: #D60041;
+$green: #8ded26;
 
 html {
 	height: 100vh;
@@ -131,6 +134,19 @@ text {
 			margin-bottom: 0.6rem;
 		}
 	}
+	&-count {
+		margin-bottom: 0.5rem;
+		max-width: 10.6rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.event-count {
+		background: $yellow;
+		text-align: center;
+		border-radius: 2rem;
+		padding: 0.3rem 1rem;
+	}
 }
 
 .key {
@@ -149,13 +165,13 @@ text {
 				top: 0.25rem;
 				border: 1px solid #333;
 				&.older {
-					background-color: #D60041;
+					background-color: $red;
 				}
 				&.middle {
-					background-color: #FFE933;
+					background-color: $yellow;
 				}
 				&.newer {
-					background-color: #8ded26;
+					background-color: $green;
 				}
 			}
 		}
