@@ -20,6 +20,7 @@ var quakeData,
 var scale2d = {
 	x: null,
 	z: null,
+	larger: null,
 	depth: null,
 	color: null,
 	mag: null,
@@ -72,6 +73,11 @@ function generateBounds() {
 	absZ = Math.abs(zFloor - zCeil);
 	absY = Math.abs(yFloor - yCeil);
 	largerAbs = Math.max(absX, absZ);
+	largerAxis = function(){
+		return (absX >= absZ) ? 'x' : 'z';
+	}
+
+	console.log('larger axis: ' + largerAxis());
 
 	rangeYRatio = absY / largerAbs;
 	yScaleMax = (j * 2 - 1) * rangeYRatio;
@@ -179,9 +185,9 @@ function init() {
 			xGrid.push([x, 1, z]);
 			while (cnt < quakeData.length) {
 				scatter.push({
-					x:		scale2d.x(quakeData[cnt].x),
+					x:		scale2d.larger(quakeData[cnt].x),
 					y:		scale2d.depth(quakeData[cnt].y),
-					z:		scale2d.z(quakeData[cnt].z),
+					z:		scale2d.larger(quakeData[cnt].z),
 					mag:	quakeData[cnt].mag,
 					time: quakeData[cnt].time,
 					id:		'point_' + cnt++
@@ -196,19 +202,19 @@ function init() {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(scale2d.x(xFloor), scale2d.x(xCeil), 1)
+	d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
 		.forEach(function(d) {
 			xLine.push([d, 0, -j]);
 		});
 
-	d3.range(scale2d.z(zFloor), scale2d.z(zCeil), 1)
+	d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
 		.forEach(function(d) {
 			zLine.push([-j, 0, d]);
 		});
 
 	// **TODO: Get real fault data into fault-data.json
 	faultData.forEach(function(point){
-		var arr = [scale2d.x(point.x), scale2d.depth(point.y), scale2d.z(point.z)];
+		var arr = [scale2d.larger(point.x), scale2d.depth(point.y), scale2d.larger(point.z)];
 		faultPlane.push(arr);
 	});
 
@@ -291,13 +297,17 @@ function sizeScale() {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 
-	scale2d.x = d3.scaleLinear()
-		.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
-		.range([-j, j - 1]);
-
-	scale2d.z = d3.scaleLinear()
-		.domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer])
-		.range([-j, j - 1]);
+	if (largerAxis() == 'x') {
+		scale2d.larger = d3.scaleLinear()
+			.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
+			.range([-j, j - 1]);
+	} else if (largerAxis() == 'z') {
+		scale2d.larger = d3.scaleLinear()
+			.domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer])
+			.range([-j, j - 1]);
+	} else {
+		console.log('Could not resolve x/z axis ranges');
+	}
 
 	//Modify output range of radii based on viewport size
 	magModifier = scale / 50;
@@ -434,7 +444,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert X labels
-				return (Math.round(scale2d.x.invert(d[0]) / 1000 * 10) / 10);
+				return (Math.round(scale2d.larger.invert(d[0]) / 1000 * 10) / 10);
 			});
 
 	xText.exit().remove();
@@ -464,7 +474,7 @@ function processData(data, tt) {
 			})
 			.text(function(d){
 				//Round and invert Z labels
-				return (Math.round(scale2d.z.invert(d[2]) / 1000 * 10) / 10);
+				return (Math.round(scale2d.larger.invert(d[2]) / 1000 * 10) / 10);
 			});
 
 	zText.exit().remove();
