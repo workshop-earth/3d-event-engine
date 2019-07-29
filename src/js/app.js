@@ -198,16 +198,6 @@ function init() {
 			yLine.push([-j, d, -j]);
 		});
 
-	// d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
-	// 	.forEach(function(d) {
-	// 		xLine.push([d, 0, -j]);
-	// 	});
-
-	// d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
-	// 	.forEach(function(d) {
-	// 		zLine.push([-j, 0, d]);
-	// 	});
-
 	if (largerAxis() == 'x') {
 		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
 			.forEach(function(d) {
@@ -317,6 +307,8 @@ function sizeScale() {
 		.scale(scale)
 		.rotateCenter(rotateCenter)
 
+	// Create a single scale for x/z axes based on the larger range
+		// Keeps positioning relative in both dimensions on a square grid
 	if (largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
