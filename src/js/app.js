@@ -198,6 +198,7 @@ function init() {
 			yLine.push([-j, d, -j]);
 		});
 
+	// Keeps positioning relative in both dimensions on a square grid
 	if (largerAxis() == 'x') {
 		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
 			.forEach(function(d) {
