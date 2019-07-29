@@ -315,7 +315,8 @@ function sizeScale() {
 		.range([0, anim.endtime])
 		.clamp(true);
 
-	var axisTime = d3.axisBottom(scale2d.timeline);
+	var axisTime = d3.axisBottom(scale2d.timeline)
+									.ticks(30);
 	var timelineH = 125;
 
 	timeline.attr("transform", "translate(0," + (height - timelineH) + ")");
