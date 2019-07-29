@@ -18,8 +18,6 @@ var quakeData,
 	point3d;
 
 var scale2d = {
-	x: null,
-	z: null,
 	larger: null,
 	depth: null,
 	color: null,
@@ -76,8 +74,6 @@ function generateBounds() {
 	largerAxis = function(){
 		return (absX >= absZ) ? 'x' : 'z';
 	}
-
-	console.log('larger axis: ' + largerAxis());
 
 	rangeYRatio = absY / largerAbs;
 	yScaleMax = (j * 2 - 1) * rangeYRatio;
