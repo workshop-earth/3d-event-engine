@@ -202,15 +202,39 @@ function init() {
 			yLine.push([-j, d, -j]);
 		});
 
-	d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
-		.forEach(function(d) {
-			xLine.push([d, 0, -j]);
-		});
+	// d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
+	// 	.forEach(function(d) {
+	// 		xLine.push([d, 0, -j]);
+	// 	});
 
-	d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
-		.forEach(function(d) {
-			zLine.push([-j, 0, d]);
-		});
+	// d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
+	// 	.forEach(function(d) {
+	// 		zLine.push([-j, 0, d]);
+	// 	});
+
+	if (largerAxis() == 'x') {
+		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
+			.forEach(function(d) {
+				xLine.push([d, 0, -j]);
+			});
+
+		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
+			.forEach(function(d) {
+				zLine.push([-j, 0, d]);
+			});
+	} else if (largerAxis() == 'z') {
+		d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
+			.forEach(function(d) {
+				xLine.push([d, 0, -j]);
+			});
+
+		d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
+			.forEach(function(d) {
+				zLine.push([-j, 0, d]);
+			});
+	} else {
+		console.log('Could not resolve x/z axis ranges');
+	}
 
 	// **TODO: Get real fault data into fault-data.json
 	faultData.forEach(function(point){
