@@ -555,17 +555,18 @@ function movePlayhead(){
 	var playheadPosY = -30;
 	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
 
-	moveHistory();
+	moveHistory(playheadPosX + (playheadW/2));
 }
 
-function moveHistory(){
+function moveHistory(pos){
 	var historyScale;
+	var historyX = timelinePadding;
 	if (historyRange == null) {
 		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
 	} else {
-		historyScale = 100;
+		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
+		historyX = pos - historyScale;
 	}
-	var historyX = timelinePadding;
 	timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
 }
 
@@ -655,6 +656,7 @@ function updateHistoryRange(num) {
 		historyRange = num;
 	}
 	updateDataArray();
+	movePlayhead();
 }
 
 function updateEventCount(num) {
