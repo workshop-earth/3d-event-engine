@@ -555,15 +555,17 @@ function movePlayhead(){
 	var playheadPosY = -30;
 	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
 
-	moveHistory(playheadPosX + (playheadW/2));
+	moveHistory(playheadPosX + (playheadW/2), hoursElapsed);
 }
 
-function moveHistory(pos){
+function moveHistory(pos, elapsed){
 	var historyScale;
 	var historyX = timelinePadding;
-	if (historyRange == null) {
+	if (historyRange == null || historyRange > elapsed) {
+		// If history is not specified, or exceeds current playhead, scale from 0 position
 		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
 	} else {
+		// Scale history UI accordingly and move position with playhead
 		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
 		historyX = pos - historyScale;
 	}
