@@ -1,6 +1,7 @@
 'use strict';
 const   gulp	= require('gulp'),
-        sass	= require('gulp-sass');
+        sass	= require('gulp-sass'),
+        babel = require('gulp-babel');
 
 
 gulp.task('js', function(){
@@ -10,6 +11,9 @@ gulp.task('js', function(){
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     gulp.src('src/js/app.js')
+    .pipe(babel({
+            presets: ['@babel/env']
+        }))
     .pipe(gulp.dest('public'));
 });
 
