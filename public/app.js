@@ -527,6 +527,7 @@ function initTimelineUI() {
 
 	playhead = timeline.append('g')
 					.attr('id', 'playhead')
+					.style('pointer-events', 'none')
 
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
