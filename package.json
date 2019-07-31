@@ -4,7 +4,8 @@
   "description": "On July 5th 2019 a magnitude 7.1 earthquake struck Ridgecrest, CA. Effects were felt for miles and aftershocks were numerous. It's scale is visualized here.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ugly": "uglifyjs ./src/js/app.js -o ./public/app.js -c -m"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,8 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-sass": "^4.0.1",
+    "http-server": "^0.11.1",
     "reset-css": "^4.0.1",
-    "http-server": "^0.11.1"
+    "uglify-js": "^3.6.0"
   }
 }
