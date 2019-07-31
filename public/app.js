@@ -348,6 +348,8 @@ function sizeScale() {
 						.attr('width', width - (timelinePadding * 2))
 						.attr('height', timelineH);
 
+	timelineHist.attr('width', 1)
+
 	timelineLabel.attr('x', width / 2);
 
 	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
@@ -512,12 +514,19 @@ function processData(data, tt) {
 function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
+	var playheadY = -35;
 	timelineBG = timeline.append('rect')
-			.attr('y', -35)
+			.attr('y', playheadY)
 			.attr('class', 'timeline-bg')
 			.call(d3.drag()
 						.on('drag', timeDragged)
 						.on('start', timeDragStart))
+
+	timelineHist = timeline.append('rect')
+			.attr('y', playheadY)
+			.attr('height', -playheadY)
+			.attr('class', 'timeline-history cant-touch')
+
 	timelineLabel = timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
@@ -527,7 +536,7 @@ function initTimelineUI() {
 
 	playhead = timeline.append('g')
 					.attr('id', 'playhead')
-					.style('pointer-events', 'none')
+					.attr('class', 'cant-touch')
 
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
@@ -544,7 +553,20 @@ function movePlayhead(){
 	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
 	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
-	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')')
+	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
+
+	moveHistory();
+}
+
+function moveHistory(){
+	var historyScale;
+	if (historyRange == null) {
+		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
+	} else {
+		historyScale = 100;
+	}
+	var historyX = timelinePadding;
+	timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
 }
 
 function posPointX(d) { return d.projected.x; }
