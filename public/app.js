@@ -8,11 +8,27 @@ var j = 6.5,
     timeUnit = 1 / 60 / 60; // Convert playback scale to hours
 // Uninitialized variables
 
-var quakeData, faultData, data, targetMag, magFloor, historyRange, timeline, playhead, grid3d, point3d, xFloor, xCeil, zFloor, zCeil, xMean, zMean, yFloor, yCeil, yScaleMax, yScaleMin, magFloor, magCeil, timeFloor, timeCeil, largerAxis, gridEdgeBuffer, xGrid, scatter, yLine, xLine, zLine, faultPlane, svg, viz, vizTarget, magModifier;
+var quakeData, faultData, data, targetMag, historyRange, timeline, playhead, grid3d, point3d, largerAxis, gridEdgeBuffer, xGrid, scatter, yLine, xLine, zLine, faultPlane, svg, viz, vizTarget, magModifier;
 var viewport = {
   height: null,
   width: null,
   scale: null
+};
+var dataParams = {
+  xFloor: null,
+  xCeil: null,
+  zFloor: null,
+  zCeil: null,
+  xMean: null,
+  zMean: null,
+  yFloor: null,
+  yCeil: null,
+  yScaleMax: null,
+  yScaleMin: null,
+  magFloor: null,
+  magCeil: null,
+  timeFloor: null,
+  timeCeil: null
 };
 var timelineConfig = {
   bg: null,
@@ -50,45 +66,45 @@ var scrub = {
 };
 
 function generateBounds() {
-  xFloor = d3.min(quakeData, function (d) {
+  dataParams.xFloor = d3.min(quakeData, function (d) {
     return +d.x;
   });
-  xCeil = d3.max(quakeData, function (d) {
+  dataParams.xCeil = d3.max(quakeData, function (d) {
     return +d.x;
   });
-  zFloor = d3.min(quakeData, function (d) {
+  dataParams.zFloor = d3.min(quakeData, function (d) {
     return +d.z;
   });
-  zCeil = d3.max(quakeData, function (d) {
+  dataParams.zCeil = d3.max(quakeData, function (d) {
     return +d.z;
   });
-  xMean = d3.mean(quakeData, function (d) {
+  dataParams.xMean = d3.mean(quakeData, function (d) {
     return +d.x;
   });
-  zMean = d3.mean(quakeData, function (d) {
+  dataParams.zMean = d3.mean(quakeData, function (d) {
     return +d.z;
   });
-  yFloor = d3.min(quakeData, function (d) {
+  dataParams.yFloor = d3.min(quakeData, function (d) {
     return +d.y;
   });
-  yCeil = d3.max(quakeData, function (d) {
+  dataParams.yCeil = d3.max(quakeData, function (d) {
     return +d.y;
   });
-  magFloor = d3.min(quakeData, function (d) {
+  dataParams.magFloor = d3.min(quakeData, function (d) {
     return +d.mag;
   });
-  magCeil = d3.max(quakeData, function (d) {
+  dataParams.magCeil = d3.max(quakeData, function (d) {
     return +d.mag;
   });
-  timeFloor = d3.min(quakeData, function (d) {
+  dataParams.timeFloor = d3.min(quakeData, function (d) {
     return +d.time;
   });
-  timeCeil = d3.max(quakeData, function (d) {
+  dataParams.timeCeil = d3.max(quakeData, function (d) {
     return +d.time;
   });
-  var absX = Math.abs(xFloor - xCeil);
-  var absZ = Math.abs(zFloor - zCeil);
-  var absY = Math.abs(yFloor - yCeil);
+  var absX = Math.abs(dataParams.xFloor - dataParams.xCeil);
+  var absZ = Math.abs(dataParams.zFloor - dataParams.zCeil);
+  var absY = Math.abs(dataParams.yFloor - dataParams.yCeil);
   var largerAbs = Math.max(absX, absZ);
 
   largerAxis = function largerAxis() {
@@ -96,8 +112,8 @@ function generateBounds() {
   };
 
   var rangeYRatio = absY / largerAbs;
-  yScaleMax = (j * 2 - 1) * rangeYRatio;
-  gridEdgeBuffer = Math.max(xMean, zMean);
+  dataParams.yScaleMax = (j * 2 - 1) * rangeYRatio;
+  gridEdgeBuffer = Math.max(dataParams.xMean, dataParams.zMean);
   enableMagInput();
 }
 
@@ -170,12 +186,12 @@ function init() {
   sizeScale(); // Set scales which are independent from viz size
   // Color/Time/Depth
 
-  scale2d.color = d3.scaleLinear().domain([timeFloor, d3.mean(quakeData, function (d) {
+  scale2d.color = d3.scaleLinear().domain([dataParams.timeFloor, d3.mean(quakeData, function (d) {
     return +d.time;
-  }), timeCeil]).range([colorScaleDark, colorScaleMid, colorScaleLight]);
-  scale2d.time = d3.scaleLinear().domain([timeFloor, timeCeil]).range([0, anim.endtime]);
-  yScaleMin = 0;
-  scale2d.depth = d3.scaleLinear().domain([yFloor, yCeil]).range([yScaleMin, yScaleMax]);
+  }), dataParams.timeCeil]).range([colorScaleDark, colorScaleMid, colorScaleLight]);
+  scale2d.time = d3.scaleLinear().domain([dataParams.timeFloor, dataParams.timeCeil]).range([0, anim.endtime]);
+  dataParams.yScaleMin = 0;
+  scale2d.depth = d3.scaleLinear().domain([dataParams.yFloor, dataParams.yCeil]).range([dataParams.yScaleMin, dataParams.yScaleMax]);
   xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
 
   for (var z = -j; z < j; z++) {
@@ -196,22 +212,22 @@ function init() {
   }
 
   var yScaleBuffer = 0.75;
-  d3.range(yScaleMin, yScaleMax + yScaleBuffer, 0.8).forEach(function (d) {
+  d3.range(dataParams.yScaleMin, dataParams.yScaleMax + yScaleBuffer, 0.8).forEach(function (d) {
     yLine.push([-j, d, -j]);
   }); // Keeps positioning relative in both dimensions on a square grid
 
   if (largerAxis() == 'x') {
-    d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1).forEach(function (d) {
+    d3.range(scale2d.larger(dataParams.xFloor), scale2d.larger(dataParams.xCeil), 1).forEach(function (d) {
       xLine.push([d, 0, -j]);
     });
-    d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1).forEach(function (d) {
+    d3.range(scale2d.larger(dataParams.xFloor), scale2d.larger(dataParams.xCeil), 1).forEach(function (d) {
       zLine.push([-j, 0, d]);
     });
   } else if (largerAxis() == 'z') {
-    d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1).forEach(function (d) {
+    d3.range(scale2d.larger(dataParams.zFloor), scale2d.larger(dataParams.zCeil), 1).forEach(function (d) {
       xLine.push([d, 0, -j]);
     });
-    d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1).forEach(function (d) {
+    d3.range(scale2d.larger(dataParams.zFloor), scale2d.larger(dataParams.zCeil), 1).forEach(function (d) {
       zLine.push([-j, 0, d]);
     });
   } else {
@@ -234,7 +250,7 @@ function sizeScale() {
 
   origin = [viewport.width / 2, viewport.height / 3.25]; // Programmatically rotate around centerpoint of dynamic grid
 
-  orbit.rotateCenter = [0, yScaleMax / 2, 0];
+  orbit.rotateCenter = [0, dataParams.yScaleMax / 2, 0];
   svg.attr('height', viewport.height).attr('width', viewport.width);
   vizTarget.attr('height', viewport.height).attr('width', viewport.width);
   grid3d = d3._3d().shape('GRID', j * 2).origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter).y(function () {
@@ -258,18 +274,18 @@ function sizeScale() {
   // Keeps positioning relative in both dimensions on a square grid
 
   if (largerAxis() == 'x') {
-    scale2d.larger = d3.scaleLinear().domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer]).range([-j, j - 1]);
+    scale2d.larger = d3.scaleLinear().domain([dataParams.xFloor - gridEdgeBuffer, dataParams.xCeil + gridEdgeBuffer]).range([-j, j - 1]);
   } else if (largerAxis() == 'z') {
-    scale2d.larger = d3.scaleLinear().domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer]).range([-j, j - 1]);
+    scale2d.larger = d3.scaleLinear().domain([dataParams.zFloor - gridEdgeBuffer, dataParams.zCeil + gridEdgeBuffer]).range([-j, j - 1]);
   } else {
     console.log('Could not resolve x/z axis ranges');
   } //Modify output range of radii based on viewport size
 
 
   magModifier = viewport.scale / 50;
-  scale2d.mag = d3.scaleLinear().domain([magFloor, 10]).range([2 * magModifier, 25 * magModifier]);
+  scale2d.mag = d3.scaleLinear().domain([dataParams.magFloor, 10]).range([2 * magModifier, 25 * magModifier]);
   timelineConfig.pad = viewport.width * .1;
-  scale2d.timeline = d3.scaleLinear().domain([timeFloor * timeUnit, timeCeil * timeUnit]).range([0, viewport.width - timelineConfig.pad * 2]);
+  scale2d.timeline = d3.scaleLinear().domain([dataParams.timeFloor * timeUnit, dataParams.timeCeil * timeUnit]).range([0, viewport.width - timelineConfig.pad * 2]);
   scale2d.scrub = d3.scaleLinear().domain([timelineConfig.pad, viewport.width - timelineConfig.pad]).range([0, anim.endtime]).clamp(true);
   var axisTime = d3.axisBottom(scale2d.timeline).ticks(30);
   var timelineH = 125;
@@ -519,8 +535,8 @@ function updateEventCount(num) {
 }
 
 function enableMagInput() {
-  magInput.min = magFloor;
-  magInput.max = magCeil;
+  magInput.min = dataParams.magFloor;
+  magInput.max = dataParams.magCeil;
   magInput.disabled = false;
   magInput.addEventListener('change', function (e) {
     if (magInput.value < magInput.min) {
