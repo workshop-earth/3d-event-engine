@@ -16,7 +16,45 @@ var quakeData,
 	timeline,
 	playhead,
 	grid3d,
-	point3d;
+	point3d,
+	xFloor,
+	xCeil,
+	zFloor,
+	zCeil,
+	xMean,
+	zMean,
+	yFloor,
+	yCeil,
+	yScaleMax,
+	yScaleMin,
+	magFloor,
+	magCeil,
+	timeFloor,
+	timeCeil,
+	largerAxis,
+	gridEdgeBuffer,
+	xGrid,
+	scatter,
+	yLine,
+	xLine,
+	zLine,
+	faultPlane,
+	svg,
+	viz,
+	vizTarget,
+	timelineBG,
+	timelineHist,
+	timelineLabel,
+	timelineAxis,
+	timelinePadding,
+	scale,
+	magModifier;
+
+var viewport = {
+	height: null,
+	width: null,
+	scale: null
+}
 
 var scale2d = {
 	larger: null,
@@ -39,7 +77,8 @@ var orbit = {
 	mx: null,
 	my: null,
 	mouseX: null,
-	mouseY: null
+	mouseY: null,
+	rotateCenter: null
 }
 
 var scrub = {
@@ -68,15 +107,15 @@ function generateBounds() {
 	timeFloor = d3.min(quakeData, function(d) { return + d.time;});
 	timeCeil = d3.max(quakeData, function(d) { return + d.time;});
 
-	absX = Math.abs(xFloor - xCeil);
-	absZ = Math.abs(zFloor - zCeil);
-	absY = Math.abs(yFloor - yCeil);
-	largerAbs = Math.max(absX, absZ);
+	var absX = Math.abs(xFloor - xCeil);
+	var absZ = Math.abs(zFloor - zCeil);
+	var absY = Math.abs(yFloor - yCeil);
+	var largerAbs = Math.max(absX, absZ);
 	largerAxis = function(){
 		return (absX >= absZ) ? 'x' : 'z';
 	}
 
-	rangeYRatio = absY / largerAbs;
+	var rangeYRatio = absY / largerAbs;
 	yScaleMax = (j * 2 - 1) * rangeYRatio;
 	gridEdgeBuffer = Math.max(xMean, zMean);
 
@@ -236,21 +275,21 @@ function init() {
 
 
 function sizeScale() {
-	height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	scale	= Math.min(width * 0.045, 50);
+	viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	scale	= Math.min(viewport.width * 0.045, 50);
 
 	//Little bit of magic to get best visual center
-	origin = [width/2, height/3.25];
+	origin = [viewport.width/2, viewport.height/3.25];
 
 	// Programmatically rotate around centerpoint of dynamic grid
-	rotateCenter = [0, (yScaleMax / 2) ,0];
+	orbit.rotateCenter = [0, (yScaleMax / 2) ,0];
 
-	svg.attr('height', height)
-			.attr('width', width)
+	svg.attr('height', viewport.height)
+			.attr('width', viewport.width)
 
-	vizTarget.attr('height', height)
-					.attr('width', width)
+	vizTarget.attr('height', viewport.height)
+					.attr('width', viewport.width)
 
 	grid3d = d3._3d()
 		.shape('GRID', j*2)
@@ -258,7 +297,7 @@ function sizeScale() {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
@@ -271,13 +310,13 @@ function sizeScale() {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.y = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
 		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
@@ -285,7 +324,7 @@ function sizeScale() {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
@@ -296,7 +335,7 @@ function sizeScale() {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
@@ -307,7 +346,7 @@ function sizeScale() {
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
 		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateCenter(orbit.rotateCenter)
 
 	// Create a single scale for x/z axes based on the larger range
 		// Keeps positioning relative in both dimensions on a square grid
@@ -329,28 +368,28 @@ function sizeScale() {
 		.domain([magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
 
-	timelinePadding = width * .1;
+	timelinePadding = viewport.width * .1;
 	scale2d.timeline = d3.scaleLinear()
 		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
-		.range([0, width - timelinePadding * 2]);
+		.range([0, viewport.width - timelinePadding * 2]);
 
 	scale2d.scrub = d3.scaleLinear()
-		.domain([timelinePadding, width - timelinePadding])
+		.domain([timelinePadding, viewport.width - timelinePadding])
 		.range([0, anim.endtime])
 		.clamp(true);
 
-	var axisTime = d3.axisBottom(scale2d.timeline)
+	const axisTime = d3.axisBottom(scale2d.timeline)
 									.ticks(30);
-	var timelineH = 125;
+	let timelineH = 125;
 
-	timeline.attr("transform", "translate(0," + (height - timelineH) + ")");
+	timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
 	timelineBG.attr('x', timelinePadding)
-						.attr('width', width - (timelinePadding * 2))
+						.attr('width', viewport.width - (timelinePadding * 2))
 						.attr('height', timelineH);
 
 	timelineHist.attr('width', 1)
 
-	timelineLabel.attr('x', width / 2);
+	timelineLabel.attr('x', viewport.width / 2);
 
 	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
 							.call(axisTime);
