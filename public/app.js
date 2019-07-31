@@ -12,6 +12,7 @@ var quakeData,
 	data,
 	targetMag,
 	magFloor,
+	historyRange,
 	timeline,
 	playhead,
 	grid3d,
@@ -347,6 +348,8 @@ function sizeScale() {
 						.attr('width', width - (timelinePadding * 2))
 						.attr('height', timelineH);
 
+	timelineHist.attr('width', 1)
+
 	timelineLabel.attr('x', width / 2);
 
 	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
@@ -368,8 +371,19 @@ function processData(data, tt) {
 	xGrid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	// Filter data based on time/progress, building array over time
-	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(anim.progress));
+	// Filter data based on time/progress and active history range, controlling array over time
+	var currentData = data[1].filter(function(quake){
+		if (historyRange != null) {
+			// If history has input, limit filter to a min/max
+			var historyPoint = (scale2d.time.invert(anim.progress) - (historyRange / timeUnit));
+			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
+				return quake.time <= scale2d.time.invert(anim.progress)
+			}
+		} else {
+			// No history input, only accumulate array over time
+			return quake.time <= scale2d.time.invert(anim.progress)
+		}
+	});
 	updateEventCount(currentData.length);
 	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
@@ -500,12 +514,19 @@ function processData(data, tt) {
 function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
+	var playheadY = -35;
 	timelineBG = timeline.append('rect')
-			.attr('y', -35)
+			.attr('y', playheadY)
 			.attr('class', 'timeline-bg')
 			.call(d3.drag()
 						.on('drag', timeDragged)
 						.on('start', timeDragStart))
+
+	timelineHist = timeline.append('rect')
+			.attr('y', playheadY)
+			.attr('height', -playheadY)
+			.attr('class', 'timeline-history cant-touch')
+
 	timelineLabel = timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
@@ -515,7 +536,7 @@ function initTimelineUI() {
 
 	playhead = timeline.append('g')
 					.attr('id', 'playhead')
-					.style('pointer-events', 'none')
+					.attr('class', 'cant-touch')
 
 	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
@@ -532,7 +553,23 @@ function movePlayhead(){
 	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
 	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
-	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')')
+	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
+
+	moveHistory(playheadPosX + (playheadW/2), hoursElapsed);
+}
+
+function moveHistory(pos, elapsed){
+	var historyScale;
+	var historyX = timelinePadding;
+	if (historyRange == null || historyRange > elapsed) {
+		// If history is not specified, or exceeds current playhead, scale from 0 position
+		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
+	} else {
+		// Scale history UI accordingly and move position with playhead
+		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
+		historyX = pos - historyScale;
+	}
+	timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
 }
 
 function posPointX(d) { return d.projected.x; }
@@ -595,6 +632,7 @@ function dragEnd(){
 }
 
 var magInput = document.querySelector('#magInput');
+var historyInput = document.querySelector('#historyInput');
 var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
@@ -607,6 +645,21 @@ btnViewFront.addEventListener('click', rFront);
 btnReplay.addEventListener('click', function(){
 	init();
 });
+
+
+historyInput.addEventListener('change', function(e){
+	updateHistoryRange(e.target.value);
+});
+function updateHistoryRange(num) {
+	if (num <= 0) {
+		historyInput.value = '';
+		historyRange = null;
+	} else {
+		historyRange = num;
+	}
+	updateDataArray();
+	movePlayhead();
+}
 
 function updateEventCount(num) {
 	eventCount.textContent = num;
