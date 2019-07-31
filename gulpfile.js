@@ -1,9 +1,14 @@
 'use strict';
-const	gulp	= require('gulp'),
-			sass	= require('gulp-sass');
+const   gulp	= require('gulp'),
+        sass	= require('gulp-sass');
 
 
 gulp.task('js', function(){
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log('JS not minified; run `npm run ugly`');
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     gulp.src('src/js/app.js')
     .pipe(gulp.dest('public'));
 });
