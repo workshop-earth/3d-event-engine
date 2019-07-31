@@ -594,6 +594,7 @@ function dragEnd(){
 }
 
 var magInput = document.querySelector('#magInput');
+var historyInput = document.querySelector('#historyInput');
 var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
@@ -606,6 +607,14 @@ btnViewFront.addEventListener('click', rFront);
 btnReplay.addEventListener('click', function(){
 	init();
 });
+
+
+historyInput.addEventListener('change', function(e){
+	updateHistoryRange(e.target.value);
+});
+function updateHistoryRange(num) {
+	console.log('history set to: ' + num);
+}
 
 function updateEventCount(num) {
 	eventCount.textContent = num;
