@@ -12,6 +12,7 @@ var quakeData,
 	data,
 	targetMag,
 	magFloor,
+	historyRange,
 	timeline,
 	playhead,
 	grid3d,
@@ -368,8 +369,19 @@ function processData(data, tt) {
 	xGrid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	// Filter data based on time/progress, building array over time
-	var currentData = data[1].filter(quake => quake.time <= scale2d.time.invert(anim.progress));
+	// Filter data based on time/progress and active history range, controlling array over time
+	var currentData = data[1].filter(function(quake){
+		if (historyRange != null) {
+			// If history has input, limit filter to a min/max
+			var historyPoint = (scale2d.time.invert(anim.progress) - (historyRange / timeUnit));
+			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
+				return quake.time <= scale2d.time.invert(anim.progress)
+			}
+		} else {
+			// No history input, only accumulate array over time
+			return quake.time <= scale2d.time.invert(anim.progress)
+		}
+	});
 	updateEventCount(currentData.length);
 	var points = viz.selectAll('circle').data(currentData, key);
 	points.enter()
@@ -613,7 +625,13 @@ historyInput.addEventListener('change', function(e){
 	updateHistoryRange(e.target.value);
 });
 function updateHistoryRange(num) {
-	console.log('history set to: ' + num);
+	if (num <= 0) {
+		historyInput.value = '';
+		historyRange = null;
+	} else {
+		historyRange = num;
+	}
+	updateDataArray();
 }
 
 function updateEventCount(num) {
