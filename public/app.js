@@ -8,11 +8,18 @@ var j = 6.5,
     timeUnit = 1 / 60 / 60; // Convert playback scale to hours
 // Uninitialized variables
 
-var quakeData, faultData, data, targetMag, magFloor, historyRange, timeline, playhead, grid3d, point3d, xFloor, xCeil, zFloor, zCeil, xMean, zMean, yFloor, yCeil, yScaleMax, yScaleMin, magFloor, magCeil, timeFloor, timeCeil, largerAxis, gridEdgeBuffer, xGrid, scatter, yLine, xLine, zLine, faultPlane, svg, viz, vizTarget, timelineBG, timelineHist, timelineLabel, timelineAxis, timelinePadding, scale, magModifier;
+var quakeData, faultData, data, targetMag, magFloor, historyRange, timeline, playhead, grid3d, point3d, xFloor, xCeil, zFloor, zCeil, xMean, zMean, yFloor, yCeil, yScaleMax, yScaleMin, magFloor, magCeil, timeFloor, timeCeil, largerAxis, gridEdgeBuffer, xGrid, scatter, yLine, xLine, zLine, faultPlane, svg, viz, vizTarget, magModifier;
 var viewport = {
   height: null,
   width: null,
   scale: null
+};
+var timelineConfig = {
+  bg: null,
+  hist: null,
+  label: null,
+  axis: null,
+  pad: null
 };
 var scale2d = {
   larger: null,
@@ -223,14 +230,14 @@ function init() {
 function sizeScale() {
   viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-  scale = Math.min(viewport.width * 0.045, 50); //Little bit of magic to get best visual center
+  viewport.scale = Math.min(viewport.width * 0.045, 50); //Little bit of magic to get best visual center
 
   origin = [viewport.width / 2, viewport.height / 3.25]; // Programmatically rotate around centerpoint of dynamic grid
 
   orbit.rotateCenter = [0, yScaleMax / 2, 0];
   svg.attr('height', viewport.height).attr('width', viewport.width);
   vizTarget.attr('height', viewport.height).attr('width', viewport.width);
-  grid3d = d3._3d().shape('GRID', j * 2).origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(scale).rotateCenter(orbit.rotateCenter).y(function () {
+  grid3d = d3._3d().shape('GRID', j * 2).origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter).y(function () {
     return scale2d.depth(0);
   });
   point3d = d3._3d().x(function (d) {
@@ -239,15 +246,15 @@ function sizeScale() {
     return d.y;
   }).z(function (d) {
     return d.z;
-  }).origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(scale).rotateCenter(orbit.rotateCenter);
-  scale3d.y = d3._3d().shape('LINE_STRIP').origin(origin).scale(scale).rotateCenter(orbit.rotateCenter);
-  scale3d.x = d3._3d().shape('LINE_STRIP').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(scale).rotateCenter(orbit.rotateCenter).y(function () {
+  }).origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter);
+  scale3d.y = d3._3d().shape('LINE_STRIP').origin(origin).scale(viewport.scale).rotateCenter(orbit.rotateCenter);
+  scale3d.x = d3._3d().shape('LINE_STRIP').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter).y(function () {
     return scale2d.depth(0);
   });
-  scale3d.z = d3._3d().shape('LINE_STRIP').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(scale).rotateCenter(orbit.rotateCenter).y(function () {
+  scale3d.z = d3._3d().shape('LINE_STRIP').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter).y(function () {
     return scale2d.depth(0);
   });
-  scale3d.fault = d3._3d().shape('PLANE').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(scale).rotateCenter(orbit.rotateCenter); // Create a single scale for x/z axes based on the larger range
+  scale3d.fault = d3._3d().shape('PLANE').origin(origin).rotateY(startAngleY).rotateX(startAngleX).scale(viewport.scale).rotateCenter(orbit.rotateCenter); // Create a single scale for x/z axes based on the larger range
   // Keeps positioning relative in both dimensions on a square grid
 
   if (largerAxis() == 'x') {
@@ -259,18 +266,18 @@ function sizeScale() {
   } //Modify output range of radii based on viewport size
 
 
-  magModifier = scale / 50;
+  magModifier = viewport.scale / 50;
   scale2d.mag = d3.scaleLinear().domain([magFloor, 10]).range([2 * magModifier, 25 * magModifier]);
-  timelinePadding = viewport.width * .1;
-  scale2d.timeline = d3.scaleLinear().domain([timeFloor * timeUnit, timeCeil * timeUnit]).range([0, viewport.width - timelinePadding * 2]);
-  scale2d.scrub = d3.scaleLinear().domain([timelinePadding, viewport.width - timelinePadding]).range([0, anim.endtime]).clamp(true);
+  timelineConfig.pad = viewport.width * .1;
+  scale2d.timeline = d3.scaleLinear().domain([timeFloor * timeUnit, timeCeil * timeUnit]).range([0, viewport.width - timelineConfig.pad * 2]);
+  scale2d.scrub = d3.scaleLinear().domain([timelineConfig.pad, viewport.width - timelineConfig.pad]).range([0, anim.endtime]).clamp(true);
   var axisTime = d3.axisBottom(scale2d.timeline).ticks(30);
   var timelineH = 125;
   timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
-  timelineBG.attr('x', timelinePadding).attr('width', viewport.width - timelinePadding * 2).attr('height', timelineH);
-  timelineHist.attr('width', 1);
-  timelineLabel.attr('x', viewport.width / 2);
-  timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)').call(axisTime);
+  timelineConfig.bg.attr('x', timelineConfig.pad).attr('width', viewport.width - timelineConfig.pad * 2).attr('height', timelineH);
+  timelineConfig.hist.attr('width', 1);
+  timelineConfig.label.attr('x', viewport.width / 2);
+  timelineConfig.axis.attr('transform', 'translate(' + timelineConfig.pad + ', 0)').call(axisTime);
 }
 
 function processData(data, tt) {
@@ -384,10 +391,10 @@ function initTimelineUI() {
   // Initialize the timeline component
   // Sizing/scaling handled on resize
   var playheadY = -35;
-  timelineBG = timeline.append('rect').attr('y', playheadY).attr('class', 'timeline-bg').call(d3.drag().on('drag', timeDragged).on('start', timeDragStart));
-  timelineHist = timeline.append('rect').attr('y', playheadY).attr('height', -playheadY).attr('class', 'timeline-history cant-touch');
-  timelineLabel = timeline.append('text').text('Hours from primary event').attr('y', '50').attr('text-anchor', 'middle');
-  timelineAxis = timeline.append('g').attr("id", "timeAxis");
+  timelineConfig.bg = timeline.append('rect').attr('y', playheadY).attr('class', 'timeline-bg').call(d3.drag().on('drag', timeDragged).on('start', timeDragStart));
+  timelineConfig.hist = timeline.append('rect').attr('y', playheadY).attr('height', -playheadY).attr('class', 'timeline-history cant-touch');
+  timelineConfig.label = timeline.append('text').text('Hours from primary event').attr('y', '50').attr('text-anchor', 'middle');
+  timelineConfig.axis = timeline.append('g').attr("id", "timeAxis");
   playhead = timeline.append('g').attr('id', 'playhead').attr('class', 'cant-touch');
   playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z').attr('class', 'playhead-body');
   playhead.append('path').attr('d', 'M3,7.5H7').attr('class', 'playhead-stroke');
@@ -398,7 +405,7 @@ function initTimelineUI() {
 function movePlayhead() {
   var playheadW = 10;
   var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
-  var playheadPosX = timelinePadding - playheadW / 2 + scale2d.timeline(hoursElapsed);
+  var playheadPosX = timelineConfig.pad - playheadW / 2 + scale2d.timeline(hoursElapsed);
   var playheadPosY = -30;
   playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
   moveHistory(playheadPosX + playheadW / 2, hoursElapsed);
@@ -406,18 +413,18 @@ function movePlayhead() {
 
 function moveHistory(pos, elapsed) {
   var historyScale;
-  var historyX = timelinePadding;
+  var historyX = timelineConfig.pad;
 
   if (historyRange == null || historyRange > elapsed) {
     // If history is not specified, or exceeds current playhead, scale from 0 position
-    historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
+    historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
   } else {
     // Scale history UI accordingly and move position with playhead
-    historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
+    historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelineConfig.pad;
     historyX = pos - historyScale;
   }
 
-  timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)');
+  timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)');
 }
 
 function posPointX(d) {

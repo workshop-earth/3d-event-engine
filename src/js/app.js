@@ -42,18 +42,20 @@ var quakeData,
 	svg,
 	viz,
 	vizTarget,
-	timelineBG,
-	timelineHist,
-	timelineLabel,
-	timelineAxis,
-	timelinePadding,
-	scale,
 	magModifier;
 
 var viewport = {
 	height: null,
 	width: null,
 	scale: null
+}
+
+var timelineConfig = {
+	bg: null,
+	hist: null,
+	label: null,
+	axis: null,
+	pad: null
 }
 
 var scale2d = {
@@ -277,7 +279,7 @@ function init() {
 function sizeScale() {
 	viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	scale	= Math.min(viewport.width * 0.045, 50);
+	viewport.scale	= Math.min(viewport.width * 0.045, 50);
 
 	//Little bit of magic to get best visual center
 	origin = [viewport.width/2, viewport.height/3.25];
@@ -296,7 +298,7 @@ function sizeScale() {
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
@@ -309,13 +311,13 @@ function sizeScale() {
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.y = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.x = d3._3d()
@@ -323,7 +325,7 @@ function sizeScale() {
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
@@ -334,7 +336,7 @@ function sizeScale() {
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
@@ -345,7 +347,7 @@ function sizeScale() {
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
-		.scale(scale)
+		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 
 	// Create a single scale for x/z axes based on the larger range
@@ -363,18 +365,18 @@ function sizeScale() {
 	}
 
 	//Modify output range of radii based on viewport size
-	magModifier = scale / 50;
+	magModifier = viewport.scale / 50;
 	scale2d.mag = d3.scaleLinear()
 		.domain([magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
 
-	timelinePadding = viewport.width * .1;
+	timelineConfig.pad = viewport.width * .1;
 	scale2d.timeline = d3.scaleLinear()
 		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
-		.range([0, viewport.width - timelinePadding * 2]);
+		.range([0, viewport.width - timelineConfig.pad * 2]);
 
 	scale2d.scrub = d3.scaleLinear()
-		.domain([timelinePadding, viewport.width - timelinePadding])
+		.domain([timelineConfig.pad, viewport.width - timelineConfig.pad])
 		.range([0, anim.endtime])
 		.clamp(true);
 
@@ -383,15 +385,15 @@ function sizeScale() {
 	let timelineH = 125;
 
 	timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
-	timelineBG.attr('x', timelinePadding)
-						.attr('width', viewport.width - (timelinePadding * 2))
+	timelineConfig.bg.attr('x', timelineConfig.pad)
+						.attr('width', viewport.width - (timelineConfig.pad * 2))
 						.attr('height', timelineH);
 
-	timelineHist.attr('width', 1)
+	timelineConfig.hist.attr('width', 1)
 
-	timelineLabel.attr('x', viewport.width / 2);
+	timelineConfig.label.attr('x', viewport.width / 2);
 
-	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
+	timelineConfig.axis.attr('transform', 'translate(' + timelineConfig.pad + ', 0)')
 							.call(axisTime);
 }
 
@@ -554,23 +556,23 @@ function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
 	var playheadY = -35;
-	timelineBG = timeline.append('rect')
+	timelineConfig.bg = timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('class', 'timeline-bg')
 			.call(d3.drag()
 						.on('drag', timeDragged)
 						.on('start', timeDragStart))
 
-	timelineHist = timeline.append('rect')
+	timelineConfig.hist = timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('height', -playheadY)
 			.attr('class', 'timeline-history cant-touch')
 
-	timelineLabel = timeline.append('text')
+	timelineConfig.label = timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
 			.attr('text-anchor', 'middle')
-	timelineAxis = timeline.append('g')
+	timelineConfig.axis = timeline.append('g')
 			.attr("id", "timeAxis")
 
 	playhead = timeline.append('g')
@@ -590,7 +592,7 @@ function initTimelineUI() {
 function movePlayhead(){
 	var playheadW = 10;
 	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
-	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
+	var playheadPosX = (timelineConfig.pad - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
 	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
 
@@ -599,16 +601,16 @@ function movePlayhead(){
 
 function moveHistory(pos, elapsed){
 	var historyScale;
-	var historyX = timelinePadding;
+	var historyX = timelineConfig.pad;
 	if (historyRange == null || historyRange > elapsed) {
 		// If history is not specified, or exceeds current playhead, scale from 0 position
-		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
+		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
+		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
-	timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
+	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
 }
 
 function posPointX(d) { return d.projected.x; }
