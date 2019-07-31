@@ -16,6 +16,10 @@ html {
 	box-sizing: border-box;
 }
 
+.cant-touch {
+	pointer-events: none;
+}
+
 h1 {
 	height: 1px;
 	width: 1px;
@@ -57,9 +61,14 @@ path, line {
 	fill: transparent;
 }
 
-.timeline-baseline {
-	stroke-width: 1;
-	stroke-opacity: 1;
+.timeline {
+	&-baseline {
+		stroke-width: 1;
+		stroke-opacity: 1;
+	}
+	&-history {
+		fill: lighten($green, 20%);
+	}
 }
 
 .playhead {
