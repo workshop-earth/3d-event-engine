@@ -87,8 +87,7 @@ var orbit = {
 
 var scrub = {
 	startX: null,
-	newX: null,
-	delta: null
+	newX: null
 }
 
 
