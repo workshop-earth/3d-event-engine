@@ -11,9 +11,9 @@ gulp.task('js', function(){
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
     gulp.src('src/js/app.js')
-    .pipe(babel({
-            presets: ['@babel/env']
-        }))
+    // .pipe(babel({
+    //         presets: ['@babel/env']
+    //     }))
     .pipe(gulp.dest('public'));
 });
 

@@ -7,9 +7,7 @@ var j = 6.5,
 	timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
-var targetMag,
-	historyRange,
-	timeline,
+var timeline,
 	playhead,
 	grid3d,
 	point3d,
@@ -23,8 +21,13 @@ var targetMag,
 	faultPlane,
 	svg,
 	viz,
-	vizTarget,
-	magModifier;
+	vizTarget;
+
+//**TODO: refactor min magnitude input into inputs object
+	// Treat filtering the same as history (on point plot instead of refetching every time)
+var inputs = {
+	maxHist: null
+}
 
 var appData = {
 	quakeRaw: null,
@@ -178,8 +181,6 @@ function init() {
 
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
-
-	targetMag = d3.min(appData.quakeRaw, function(d) { return + d.mag;});
 
 	svg = d3.select(vizHolder)
 				.append('svg')
@@ -366,7 +367,7 @@ function sizeScale() {
 	}
 
 	//Modify output range of radii based on viewport size
-	magModifier = viewport.scale / 50;
+	var magModifier = viewport.scale / 50;
 	scale2d.mag = d3.scaleLinear()
 		.domain([appData.magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
@@ -415,9 +416,9 @@ function processData(data, tt) {
 	/* ----------- POINTS ----------- */
 	// Filter data based on time/progress and active history range, controlling array over time
 	var currentData = appData.formatted[1].filter(function(quake){
-		if (historyRange != null) {
+		if (inputs.maxHist != null) {
 			// If history has input, limit filter to a min/max
-			var historyPoint = (scale2d.time.invert(anim.progress) - (historyRange / timeUnit));
+			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timeUnit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
 				return quake.time <= scale2d.time.invert(anim.progress)
 			}
@@ -603,12 +604,12 @@ function movePlayhead(){
 function moveHistory(pos, elapsed){
 	var historyScale;
 	var historyX = timelineConfig.pad;
-	if (historyRange == null || historyRange > elapsed) {
+	if (inputs.maxHist == null || inputs.maxHist > elapsed) {
 		// If history is not specified, or exceeds current playhead, scale from 0 position
 		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelineConfig.pad;
+		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timeUnit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
 	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
@@ -695,9 +696,9 @@ historyInput.addEventListener('change', function(e){
 function updateHistoryRange(num) {
 	if (num <= 0) {
 		historyInput.value = '';
-		historyRange = null;
+		inputs.maxHist = null;
 	} else {
-		historyRange = num;
+		inputs.maxHist = num;
 	}
 	updateDataArray();
 	movePlayhead();
@@ -713,7 +714,8 @@ function enableMagInput() {
 	magInput.disabled = false;
 	magInput.addEventListener('change', function(e){
 		if (magInput.value < magInput.min) { magInput.value = magInput.min; }
-		fetchappData.quakeRaw(magInput.value);
+		//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
+		fetchQuakeData(magInput.value);
 	});
 }
 
@@ -754,8 +756,9 @@ function rFront() {
 }
 
 //Data fetch
-fetchappData.quakeRaw(magInput.value);
-function fetchappData.quakeRaw(targetMag){
+	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
+fetchQuakeData(magInput.value);
+function fetchQuakeData(magnitude){
 	var request	= new XMLHttpRequest(),
 			datapath	= './data.json';
 	request.open('GET', datapath, true);
@@ -768,11 +771,11 @@ function fetchappData.quakeRaw(targetMag){
 
 			// Limit active dataset based on GUI input
 			appData.quakeRaw = appData.quakeRaw.filter(function(quake) {
-				return quake.mag >= targetMag;
+				return quake.mag >= magnitude;
 			});
 
 
-			fetchappData.faultRaw();
+			fetchFaultData();
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
 	request.onerror = function() { console.log('There was a connection error of some sort'); };
@@ -780,7 +783,7 @@ function fetchappData.quakeRaw(targetMag){
 }
 
 
-function fetchappData.faultRaw(targetMag){
+function fetchFaultData(){
 	var request	= new XMLHttpRequest(),
 			datapath	= './fault-data.json';
 	request.open('GET', datapath, true);
