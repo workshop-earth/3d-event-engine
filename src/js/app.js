@@ -1,7 +1,5 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var timeUnit = 1/60/60; // Convert playback scale to hours
-
 // Uninitialized variables
 var faultPlane;
 
@@ -62,7 +60,8 @@ var timelineConfig = {
 	hist: null,
 	label: null,
 	axis: null,
-	pad: null
+	pad: null,
+	unit: 1/60/60 // Convert playback scale to hours
 }
 
 var scale2d = {
@@ -383,7 +382,7 @@ function sizeScale() {
 
 	timelineConfig.pad = viewport.width * .1;
 	scale2d.timeline = d3.scaleLinear()
-		.domain([appData.timeFloor * timeUnit, appData.timeCeil * timeUnit])
+		.domain([appData.timeFloor * timelineConfig.unit, appData.timeCeil * timelineConfig.unit])
 		.range([0, viewport.width - timelineConfig.pad * 2]);
 
 	scale2d.scrub = d3.scaleLinear()
@@ -427,7 +426,7 @@ function processData(data, tt) {
 	var currentData = appData.formatted[1].filter(function(quake){
 		if (inputs.maxHist != null) {
 			// If history has input, limit filter to a min/max
-			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timeUnit));
+			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timelineConfig.unit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
 				return quake.time <= scale2d.time.invert(anim.progress)
 			}
@@ -602,7 +601,7 @@ function initTimelineUI() {
 
 function movePlayhead(){
 	var playheadW = 10;
-	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
+	var hoursElapsed = scale2d.time.invert(anim.progress) * timelineConfig.unit;
 	var playheadPosX = (timelineConfig.pad - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
 	svg.playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
@@ -618,7 +617,7 @@ function moveHistory(pos, elapsed){
 		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timeUnit)) - timelineConfig.pad;
+		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timelineConfig.unit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
 	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
