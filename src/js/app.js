@@ -1,7 +1,6 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var j = 6.5,
-	startAngle = Math.PI/5,
+var startAngle = Math.PI/5,
 	startAngleY = startAngle,
 	startAngleX = -startAngle / 5,
 	timeUnit = 1/60/60; // Convert playback scale to hours
@@ -12,6 +11,7 @@ var gridEdgeBuffer,
 
 var space = {
 	grid3d: null,
+	unit: 6.5,
 	point3d: null,
 	xGrid: null,
 	scatter: null,
@@ -127,7 +127,7 @@ function generateBounds() {
 	}
 
 	var rangeYRatio = absY / largerAbs;
-	appData.yScaleMax = (j * 2 - 1) * rangeYRatio;
+	appData.yScaleMax = (space.unit * 2 - 1) * rangeYRatio;
 	gridEdgeBuffer = Math.max(appData.xMean, appData.zMean);
 
 	enableMagInput();
@@ -225,8 +225,8 @@ function init() {
 		.range([appData.yScaleMin, appData.yScaleMax]);
 
 	space.xGrid = [], space.scatter = [], space.yLine = [], space.xLine = [], space.zLine = [], faultPlane = [];
-	for(var z = -j; z < j; z++){
-		for(var x = -j; x < j; x++){
+	for(var z = -space.unit; z < space.unit; z++){
+		for(var x = -space.unit; x < space.unit; x++){
 			space.xGrid.push([x, 1, z]);
 			while (cnt < appData.quakeRaw.length) {
 				space.scatter.push({
@@ -244,29 +244,29 @@ function init() {
 	var yScaleBuffer	= 0.75;
 	d3.range(appData.yScaleMin, appData.yScaleMax + yScaleBuffer, 0.8)
 		.forEach(function(d) {
-			space.yLine.push([-j, d, -j]);
+			space.yLine.push([-space.unit, d, -space.unit]);
 		});
 
 	// Keeps positioning relative in both dimensions on a square grid
 	if (appData.largerAxis() == 'x') {
 		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				space.xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -space.unit]);
 			});
 
 		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				space.zLine.push([-j, 0, d]);
+				space.zLine.push([-space.unit, 0, d]);
 			});
 	} else if (appData.largerAxis() == 'z') {
 		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				space.xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -space.unit]);
 			});
 
 		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				space.zLine.push([-j, 0, d]);
+				space.zLine.push([-space.unit, 0, d]);
 			});
 	} else {
 		console.log('Could not resolve x/z axis ranges');
@@ -301,7 +301,7 @@ function sizeScale() {
 					.attr('width', viewport.width)
 
 	space.grid3d = d3._3d()
-		.shape('GRID', j*2)
+		.shape('GRID', space.unit * 2)
 		.origin(origin)
 		.rotateY( startAngleY)
 		.rotateX( startAngleX)
@@ -362,11 +362,11 @@ function sizeScale() {
 	if (appData.largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.xFloor - gridEdgeBuffer, appData.xCeil + gridEdgeBuffer])
-			.range([-j, j - 1]);
+			.range([-space.unit, space.unit - 1]);
 	} else if (appData.largerAxis() == 'z') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.zFloor - gridEdgeBuffer, appData.zCeil + gridEdgeBuffer])
-			.range([-j, j - 1]);
+			.range([-space.unit, space.unit - 1]);
 	} else {
 		console.log('Could not resolve x/z axis ranges');
 	}
