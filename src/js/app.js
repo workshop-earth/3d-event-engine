@@ -7,9 +7,7 @@ var j = 6.5,
 	timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
-var timeline,
-	playhead,
-	grid3d,
+var grid3d,
 	point3d,
 	largerAxis,
 	gridEdgeBuffer,
@@ -18,10 +16,15 @@ var timeline,
 	yLine,
 	xLine,
 	zLine,
-	faultPlane,
-	svg,
-	viz,
-	vizTarget;
+	faultPlane;
+
+var svg = {
+	root: null,
+	viz: null,
+	hit: null,
+	timeline: null,
+	playhead: null
+}
 
 //**TODO: refactor min magnitude input into inputs object
 	// Treat filtering the same as history (on point plot instead of refetching every time)
@@ -182,14 +185,14 @@ function init() {
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
 
-	svg = d3.select(vizHolder)
+	svg.root = d3.select(vizHolder)
 				.append('svg')
 
-	viz = svg.append('g')
+	svg.viz = svg.root.append('g')
 				.attr('id', 'viz');
 
 	// Apply orbit controls to an overlay for better UI with playhead controls
-	vizTarget = svg.append('rect')
+	svg.hit = svg.root.append('rect')
 		.attr('x', 0)
 		.attr('y', 0)
 		.attr('class', 'viz-hit')
@@ -198,7 +201,7 @@ function init() {
 			.on('start', dragStart)
 			.on('end', dragEnd));
 
-	timeline = svg.append('g')
+	svg.timeline = svg.root.append('g')
 			.attr('id', 'timeline')
 
 	initTimelineUI();
@@ -289,10 +292,10 @@ function sizeScale() {
 	// Programmatically rotate around centerpoint of dynamic grid
 	orbit.rotateCenter = [0, (appData.yScaleMax / 2) ,0];
 
-	svg.attr('height', viewport.height)
+	svg.root.attr('height', viewport.height)
 			.attr('width', viewport.width)
 
-	vizTarget.attr('height', viewport.height)
+	svg.hit.attr('height', viewport.height)
 					.attr('width', viewport.width)
 
 	grid3d = d3._3d()
@@ -386,7 +389,7 @@ function sizeScale() {
 									.ticks(30);
 	let timelineH = 125;
 
-	timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
+	svg.timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
 	timelineConfig.bg.attr('x', timelineConfig.pad)
 						.attr('width', viewport.width - (timelineConfig.pad * 2))
 						.attr('height', timelineH);
@@ -403,7 +406,7 @@ function processData(data, tt) {
 	var key	= function(d){ return d.id; };
 
 	/* ----------- GRID ----------- */
-	var xGrid = viz.selectAll('path.grid').data(appData.formatted[0], key);
+	var xGrid = svg.viz.selectAll('path.grid').data(appData.formatted[0], key);
 
 	xGrid.enter()
 			.append('path')
@@ -428,7 +431,7 @@ function processData(data, tt) {
 		}
 	});
 	updateEventCount(currentData.length);
-	var points = viz.selectAll('circle').data(currentData, key);
+	var points = svg.viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
 			.attr('class', '_3d quake-point')
@@ -445,7 +448,7 @@ function processData(data, tt) {
 	points.exit().remove();
 
 	/* ----------- Fault Plane ----------- */
-	var faultPlane = viz.selectAll('path.fault').data(appData.formatted[3]);
+	var faultPlane = svg.viz.selectAll('path.fault').data(appData.formatted[3]);
 	faultPlane.enter()
 			.append('path')
 			.attr('class', '_3d fault')
@@ -455,7 +458,7 @@ function processData(data, tt) {
 	faultPlane.exit().remove();
 
 	/* ----------- y-Scale ----------- */
-	var yScale = viz.selectAll('path.yScale').data(appData.formatted[2].y);
+	var yScale = svg.viz.selectAll('path.yScale').data(appData.formatted[2].y);
 	yScale.enter()
 			.append('path')
 			.attr('class', '_3d yScale')
@@ -465,7 +468,7 @@ function processData(data, tt) {
 	yScale.exit().remove();
 
 	/* ----------- y-Scale Text ----------- */
-	var yText = viz.selectAll('text.yText').data(appData.formatted[2].y[0]);
+	var yText = svg.viz.selectAll('text.yText').data(appData.formatted[2].y[0]);
 
 	yText.enter()
 			.append('text')
@@ -493,7 +496,7 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- x-Scale Text ----------- */
-	var xText = viz.selectAll('text.xText').data(appData.formatted[2].x[0]);
+	var xText = svg.viz.selectAll('text.xText').data(appData.formatted[2].x[0]);
 
 	xText.enter()
 			.append('text')
@@ -523,7 +526,7 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- z-Scale Text ----------- */
-	var zText = viz.selectAll('text.zText').data(appData.formatted[2].z[0]);
+	var zText = svg.viz.selectAll('text.zText').data(appData.formatted[2].z[0]);
 
 	zText.enter()
 			.append('text')
@@ -558,36 +561,36 @@ function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
 	var playheadY = -35;
-	timelineConfig.bg = timeline.append('rect')
+	timelineConfig.bg = svg.timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('class', 'timeline-bg')
 			.call(d3.drag()
 						.on('drag', timeDragged)
 						.on('start', timeDragStart))
 
-	timelineConfig.hist = timeline.append('rect')
+	timelineConfig.hist = svg.timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('height', -playheadY)
 			.attr('class', 'timeline-history cant-touch')
 
-	timelineConfig.label = timeline.append('text')
+	timelineConfig.label = svg.timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
 			.attr('text-anchor', 'middle')
-	timelineConfig.axis = timeline.append('g')
+	timelineConfig.axis = svg.timeline.append('g')
 			.attr("id", "timeAxis")
 
-	playhead = timeline.append('g')
+	svg.playhead = svg.timeline.append('g')
 					.attr('id', 'playhead')
 					.attr('class', 'cant-touch')
 
-	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
+	svg.playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
-	playhead.append('path').attr('d', 'M3,7.5H7')
+	svg.playhead.append('path').attr('d', 'M3,7.5H7')
 					.attr('class', 'playhead-stroke')
-	playhead.append('path').attr('d', 'M3,9.5H7')
+	svg.playhead.append('path').attr('d', 'M3,9.5H7')
 					.attr('class', 'playhead-stroke')
-	playhead.append('path').attr('d', 'M3,11.5H7')
+	svg.playhead.append('path').attr('d', 'M3,11.5H7')
 					.attr('class', 'playhead-stroke')
 }
 
@@ -596,7 +599,7 @@ function movePlayhead(){
 	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
 	var playheadPosX = (timelineConfig.pad - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
-	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
+	svg.playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
 
 	moveHistory(playheadPosX + (playheadW/2), hoursElapsed);
 }
