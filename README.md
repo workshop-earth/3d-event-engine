@@ -3,8 +3,7 @@ This D3 powered visualization plots earthquake data in [3D space.](https://githu
 
 * Each individual plotted point represents a unique/measured earthquake event
 * X/Y/Z axes represent physical relationships in KM
-* Point radius represents event magnitude
-⋅⋅⋅Minimum magnitude visualized is adjustable⋅⋅
+* Point radius represents event magnitude (minimum magnitude visualized is adjustable)
 * Color is scaled across time while history range is adjustable
 * X/Z axes labels are toggleable for visibility
 * Time-based playback can be paused/scrubbed/replayed
@@ -12,8 +11,7 @@ This D3 powered visualization plots earthquake data in [3D space.](https://githu
 ## Development
 `npm install` for dependencies
 
-`gulp` defaults to a full build
-⋅⋅⋅Compiles JS & CSS
+`gulp` defaults to a full build (compiles JS & CSS)
 
 `http-server ./` for local development. Navigate to `public/` folder.
 
