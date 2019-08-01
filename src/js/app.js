@@ -574,7 +574,7 @@ function moveHistory(pos, elapsed){
 
 function posPointX(d) { return d.projected.x; }
 function posPointY(d) { return d.projected.y; }
-function magPoint (d) { return scale2d.mag(d.mag); }
+function magPoint (d) { return 2 * magModifier; }
 
 function updateDataArray() {
 	var axes = {
