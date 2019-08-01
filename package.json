@@ -1,7 +1,7 @@
 {
   "name": "ridgecrest-sequence",
   "version": "1.0.0",
-  "description": "On July 5th 2019 a magnitude 7.1 earthquake struck Ridgecrest, CA. Effects were felt for miles and aftershocks were numerous. It's scale is visualized here.",
+  "description": "This D3 powered visualization plots earthquake data in 3D space",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
