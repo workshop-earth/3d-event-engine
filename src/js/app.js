@@ -1,22 +1,68 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var j = 6.5,
-	startAngle = Math.PI/5,
-	startAngleY = startAngle,
-	startAngleX = -startAngle / 5,
-	timeUnit = 1/60/60; // Convert playback scale to hours
-
 // Uninitialized variables
-var quakeData,
-	faultData,
-	data,
-	targetMag,
-	magFloor,
-	historyRange,
-	timeline,
-	playhead,
-	grid3d,
-	point3d;
+var faultPlane;
+
+var space = {
+	grid3d: null,
+	unit: 6.5,
+	point3d: null,
+	xGrid: null,
+	scatter: null,
+	yLine: null,
+	xLine: null,
+	zLine: null,
+	buffer: null
+}
+
+var svg = {
+	root: null,
+	viz: null,
+	hit: null,
+	timeline: null,
+	playhead: null
+}
+
+//**TODO: refactor min magnitude input into inputs object
+	// Treat filtering the same as history (on point plot instead of refetching every time)
+var inputs = {
+	maxHist: null
+}
+
+var appData = {
+	quakeRaw: null,
+	faultRaw: null,
+	formatted: null,
+	xFloor: null,
+	xCeil: null,
+	zFloor: null,
+	zCeil: null,
+	xMean: null,
+	zMean: null,
+	yFloor: null,
+	yCeil: null,
+	yScaleMax: null,
+	yScaleMin: null,
+	magFloor: null,
+	magCeil: null,
+	timeFloor: null,
+	timeCeil: null
+}
+
+var viewport = {
+	height: null,
+	width: null,
+	scale: null
+}
+
+var timelineConfig = {
+	bg: null,
+	hist: null,
+	label: null,
+	axis: null,
+	pad: null,
+	unit: 1/60/60 // Convert playback scale to hours
+}
 
 var scale2d = {
 	larger: null,
@@ -34,51 +80,58 @@ var scale3d = {
 }
 
 var orbit = {
+	startAngle: Math.PI/5,
+	startAngleY: function() {
+		return this.startAngle;
+	},
+	startAngleX: function() {
+		return (this.startAngle / 5) * -1;
+	},
 	alpha: 0,
 	beta: 0,
 	mx: null,
 	my: null,
 	mouseX: null,
-	mouseY: null
+	mouseY: null,
+	rotateCenter: null
 }
 
 var scrub = {
 	startX: null,
-	newX: null,
-	delta: null
+	newX: null
 }
 
 
 function generateBounds() {
-	xFloor = d3.min(quakeData, function(d) { return + d.x;});
-	xCeil = d3.max(quakeData, function(d) { return + d.x;});
+	appData.xFloor = d3.min(appData.quakeRaw, function(d) { return + d.x;});
+	appData.xCeil = d3.max(appData.quakeRaw, function(d) { return + d.x;});
 
-	zFloor = d3.min(quakeData, function(d) { return + d.z;});
-	zCeil = d3.max(quakeData, function(d) { return + d.z;});
+	appData.zFloor = d3.min(appData.quakeRaw, function(d) { return + d.z;});
+	appData.zCeil = d3.max(appData.quakeRaw, function(d) { return + d.z;});
 
-	xMean = d3.mean(quakeData, function(d) { return + d.x;});
-	zMean = d3.mean(quakeData, function(d) { return + d.z;});
+	appData.xMean = d3.mean(appData.quakeRaw, function(d) { return + d.x;});
+	appData.zMean = d3.mean(appData.quakeRaw, function(d) { return + d.z;});
 
-	yFloor = d3.min(quakeData, function(d) { return + d.y;});
-	yCeil = d3.max(quakeData, function(d) { return + d.y;});
+	appData.yFloor = d3.min(appData.quakeRaw, function(d) { return + d.y;});
+	appData.yCeil = d3.max(appData.quakeRaw, function(d) { return + d.y;});
 
-	magFloor = d3.min(quakeData, function(d) { return + d.mag;});
-	magCeil = d3.max(quakeData, function(d) { return + d.mag;});
+	appData.magFloor = d3.min(appData.quakeRaw, function(d) { return + d.mag;});
+	appData.magCeil = d3.max(appData.quakeRaw, function(d) { return + d.mag;});
 
-	timeFloor = d3.min(quakeData, function(d) { return + d.time;});
-	timeCeil = d3.max(quakeData, function(d) { return + d.time;});
+	appData.timeFloor = d3.min(appData.quakeRaw, function(d) { return + d.time;});
+	appData.timeCeil = d3.max(appData.quakeRaw, function(d) { return + d.time;});
 
-	absX = Math.abs(xFloor - xCeil);
-	absZ = Math.abs(zFloor - zCeil);
-	absY = Math.abs(yFloor - yCeil);
-	largerAbs = Math.max(absX, absZ);
-	largerAxis = function(){
+	var absX = Math.abs(appData.xFloor - appData.xCeil);
+	var absZ = Math.abs(appData.zFloor - appData.zCeil);
+	var absY = Math.abs(appData.yFloor - appData.yCeil);
+	var largerAbs = Math.max(absX, absZ);
+	appData.largerAxis = function(){
 		return (absX >= absZ) ? 'x' : 'z';
 	}
 
-	rangeYRatio = absY / largerAbs;
-	yScaleMax = (j * 2 - 1) * rangeYRatio;
-	gridEdgeBuffer = Math.max(xMean, zMean);
+	var rangeYRatio = absY / largerAbs;
+	appData.yScaleMax = (space.unit * 2 - 1) * rangeYRatio;
+	space.buffer = Math.max(appData.xMean, appData.zMean);
 
 	enableMagInput();
 }
@@ -137,16 +190,14 @@ function init() {
 	// Dump everything before initializing
 	d3.select(vizHolder).selectAll("*").remove();
 
-	targetMag = d3.min(quakeData, function(d) { return + d.mag;});
-
-	svg = d3.select(vizHolder)
+	svg.root = d3.select(vizHolder)
 				.append('svg')
 
-	viz = svg.append('g')
+	svg.viz = svg.root.append('g')
 				.attr('id', 'viz');
 
 	// Apply orbit controls to an overlay for better UI with playhead controls
-	vizTarget = svg.append('rect')
+	svg.hit = svg.root.append('rect')
 		.attr('x', 0)
 		.attr('y', 0)
 		.attr('class', 'viz-hit')
@@ -155,7 +206,7 @@ function init() {
 			.on('start', dragStart)
 			.on('end', dragEnd));
 
-	timeline = svg.append('g')
+	svg.timeline = svg.root.append('g')
 			.attr('id', 'timeline')
 
 	initTimelineUI();
@@ -164,29 +215,29 @@ function init() {
 	// Set scales which are independent from viz size
 		// Color/Time/Depth
 	scale2d.color = d3.scaleLinear()
-		.domain([timeFloor, d3.mean(quakeData, function(d) { return + d.time;}) , timeCeil])
+		.domain([appData.timeFloor, d3.mean(appData.quakeRaw, function(d) { return + d.time;}) , appData.timeCeil])
 		.range([colorScaleDark, colorScaleMid, colorScaleLight]);
 
 	scale2d.time = d3.scaleLinear()
-		.domain([timeFloor, timeCeil])
+		.domain([appData.timeFloor, appData.timeCeil])
 		.range([0, anim.endtime]);
 
-	yScaleMin = 0;
+	appData.yScaleMin = 0;
 	scale2d.depth = d3.scaleLinear()
-		.domain([yFloor, yCeil])
-		.range([yScaleMin, yScaleMax]);
+		.domain([appData.yFloor, appData.yCeil])
+		.range([appData.yScaleMin, appData.yScaleMax]);
 
-	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
-	for(var z = -j; z < j; z++){
-		for(var x = -j; x < j; x++){
-			xGrid.push([x, 1, z]);
-			while (cnt < quakeData.length) {
-				scatter.push({
-					x:		scale2d.larger(quakeData[cnt].x),
-					y:		scale2d.depth(quakeData[cnt].y),
-					z:		scale2d.larger(quakeData[cnt].z),
-					mag:	quakeData[cnt].mag,
-					time: quakeData[cnt].time,
+	space.xGrid = [], space.scatter = [], space.yLine = [], space.xLine = [], space.zLine = [], faultPlane = [];
+	for(var z = -space.unit; z < space.unit; z++){
+		for(var x = -space.unit; x < space.unit; x++){
+			space.xGrid.push([x, 1, z]);
+			while (cnt < appData.quakeRaw.length) {
+				space.scatter.push({
+					x:		scale2d.larger(appData.quakeRaw[cnt].x),
+					y:		scale2d.depth(appData.quakeRaw[cnt].y),
+					z:		scale2d.larger(appData.quakeRaw[cnt].z),
+					mag:	appData.quakeRaw[cnt].mag,
+					time: appData.quakeRaw[cnt].time,
 					id:		'point_' + cnt++
 				});
 			}
@@ -194,38 +245,38 @@ function init() {
 	}
 
 	var yScaleBuffer	= 0.75;
-	d3.range(yScaleMin, yScaleMax + yScaleBuffer, 0.8)
+	d3.range(appData.yScaleMin, appData.yScaleMax + yScaleBuffer, 0.8)
 		.forEach(function(d) {
-			yLine.push([-j, d, -j]);
+			space.yLine.push([-space.unit, d, -space.unit]);
 		});
 
 	// Keeps positioning relative in both dimensions on a square grid
-	if (largerAxis() == 'x') {
-		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
+	if (appData.largerAxis() == 'x') {
+		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -space.unit]);
 			});
 
-		d3.range(scale2d.larger(xFloor), scale2d.larger(xCeil), 1)
+		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				zLine.push([-j, 0, d]);
+				space.zLine.push([-space.unit, 0, d]);
 			});
-	} else if (largerAxis() == 'z') {
-		d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
+	} else if (appData.largerAxis() == 'z') {
+		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -space.unit]);
 			});
 
-		d3.range(scale2d.larger(zFloor), scale2d.larger(zCeil), 1)
+		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				zLine.push([-j, 0, d]);
+				space.zLine.push([-space.unit, 0, d]);
 			});
 	} else {
 		console.log('Could not resolve x/z axis ranges');
 	}
 
 	// **TODO: Get real fault data into fault-data.json
-	faultData.forEach(function(point){
+	appData.faultRaw.forEach(function(point){
 		var arr = [scale2d.larger(point.x), scale2d.depth(point.y), scale2d.larger(point.z)];
 		faultPlane.push(arr);
 	});
@@ -236,56 +287,56 @@ function init() {
 
 
 function sizeScale() {
-	height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-	width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	scale	= Math.min(width * 0.045, 50);
+	viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	viewport.scale	= Math.min(viewport.width * 0.045, 50);
 
 	//Little bit of magic to get best visual center
-	origin = [width/2, height/3.25];
+	origin = [viewport.width/2, viewport.height/3.25];
 
 	// Programmatically rotate around centerpoint of dynamic grid
-	rotateCenter = [0, (yScaleMax / 2) ,0];
+	orbit.rotateCenter = [0, (appData.yScaleMax / 2) ,0];
 
-	svg.attr('height', height)
-			.attr('width', width)
+	svg.root.attr('height', viewport.height)
+			.attr('width', viewport.width)
 
-	vizTarget.attr('height', height)
-					.attr('width', width)
+	svg.hit.attr('height', viewport.height)
+					.attr('width', viewport.width)
 
-	grid3d = d3._3d()
-		.shape('GRID', j*2)
+	space.grid3d = d3._3d()
+		.shape('GRID', space.unit * 2)
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
 
-	point3d = d3._3d()
+	space.point3d = d3._3d()
 		.x(function(d){ return d.x; })
 		.y(function(d){ return d.y; })
 		.z(function(d){ return d.z; })
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.y = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.scale(scale)
-		.rotateCenter(rotateCenter);
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter);
 
 	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
@@ -293,10 +344,10 @@ function sizeScale() {
 	scale3d.z = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
 			return scale2d.depth(0)
 		});
@@ -304,55 +355,55 @@ function sizeScale() {
 	scale3d.fault = d3._3d()
 		.shape('PLANE')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
-		.scale(scale)
-		.rotateCenter(rotateCenter)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
+		.scale(viewport.scale)
+		.rotateCenter(orbit.rotateCenter)
 
 	// Create a single scale for x/z axes based on the larger range
 		// Keeps positioning relative in both dimensions on a square grid
-	if (largerAxis() == 'x') {
+	if (appData.largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
-			.domain([xFloor - gridEdgeBuffer, xCeil + gridEdgeBuffer])
-			.range([-j, j - 1]);
-	} else if (largerAxis() == 'z') {
+			.domain([appData.xFloor - space.buffer, appData.xCeil + space.buffer])
+			.range([-space.unit, space.unit - 1]);
+	} else if (appData.largerAxis() == 'z') {
 		scale2d.larger = d3.scaleLinear()
-			.domain([zFloor - gridEdgeBuffer, zCeil + gridEdgeBuffer])
-			.range([-j, j - 1]);
+			.domain([appData.zFloor - space.buffer, appData.zCeil + space.buffer])
+			.range([-space.unit, space.unit - 1]);
 	} else {
 		console.log('Could not resolve x/z axis ranges');
 	}
 
 	//Modify output range of radii based on viewport size
-	magModifier = scale / 50;
+	var magModifier = viewport.scale / 50;
 	scale2d.mag = d3.scaleLinear()
-		.domain([magFloor, 10])
+		.domain([appData.magFloor, 10])
 		.range([2 * magModifier, 25 * magModifier]);
 
-	timelinePadding = width * .1;
+	timelineConfig.pad = viewport.width * .1;
 	scale2d.timeline = d3.scaleLinear()
-		.domain([timeFloor * timeUnit, timeCeil * timeUnit])
-		.range([0, width - timelinePadding * 2]);
+		.domain([appData.timeFloor * timelineConfig.unit, appData.timeCeil * timelineConfig.unit])
+		.range([0, viewport.width - timelineConfig.pad * 2]);
 
 	scale2d.scrub = d3.scaleLinear()
-		.domain([timelinePadding, width - timelinePadding])
+		.domain([timelineConfig.pad, viewport.width - timelineConfig.pad])
 		.range([0, anim.endtime])
 		.clamp(true);
 
-	var axisTime = d3.axisBottom(scale2d.timeline)
+	const axisTime = d3.axisBottom(scale2d.timeline)
 									.ticks(30);
-	var timelineH = 125;
+	let timelineH = 125;
 
-	timeline.attr("transform", "translate(0," + (height - timelineH) + ")");
-	timelineBG.attr('x', timelinePadding)
-						.attr('width', width - (timelinePadding * 2))
+	svg.timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
+	timelineConfig.bg.attr('x', timelineConfig.pad)
+						.attr('width', viewport.width - (timelineConfig.pad * 2))
 						.attr('height', timelineH);
 
-	timelineHist.attr('width', 1)
+	timelineConfig.hist.attr('width', 1)
 
-	timelineLabel.attr('x', width / 2);
+	timelineConfig.label.attr('x', viewport.width / 2);
 
-	timelineAxis.attr('transform', 'translate(' + timelinePadding + ', 0)')
+	timelineConfig.axis.attr('transform', 'translate(' + timelineConfig.pad + ', 0)')
 							.call(axisTime);
 }
 
@@ -360,22 +411,22 @@ function processData(data, tt) {
 	var key	= function(d){ return d.id; };
 
 	/* ----------- GRID ----------- */
-	var xGrid = viz.selectAll('path.grid').data(data[0], key);
+	var grid = svg.viz.selectAll('path.grid').data(appData.formatted[0], key);
 
-	xGrid.enter()
+	grid.enter()
 			.append('path')
 			.attr('class', '_3d grid grid-panel')
-			.merge(xGrid)
-			.attr('d', grid3d.draw);
+			.merge(grid)
+			.attr('d', space.grid3d.draw);
 
-	xGrid.exit().remove();
+	grid.exit().remove();
 
 	/* ----------- POINTS ----------- */
 	// Filter data based on time/progress and active history range, controlling array over time
-	var currentData = data[1].filter(function(quake){
-		if (historyRange != null) {
+	var currentData = appData.formatted[1].filter(function(quake){
+		if (inputs.maxHist != null) {
 			// If history has input, limit filter to a min/max
-			var historyPoint = (scale2d.time.invert(anim.progress) - (historyRange / timeUnit));
+			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timelineConfig.unit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
 				return quake.time <= scale2d.time.invert(anim.progress)
 			}
@@ -385,7 +436,7 @@ function processData(data, tt) {
 		}
 	});
 	updateEventCount(currentData.length);
-	var points = viz.selectAll('circle').data(currentData, key);
+	var points = svg.viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
 			.attr('class', '_3d quake-point')
@@ -402,7 +453,7 @@ function processData(data, tt) {
 	points.exit().remove();
 
 	/* ----------- Fault Plane ----------- */
-	var faultPlane = viz.selectAll('path.fault').data(data[3]);
+	var faultPlane = svg.viz.selectAll('path.fault').data(appData.formatted[3]);
 	faultPlane.enter()
 			.append('path')
 			.attr('class', '_3d fault')
@@ -412,7 +463,7 @@ function processData(data, tt) {
 	faultPlane.exit().remove();
 
 	/* ----------- y-Scale ----------- */
-	var yScale = viz.selectAll('path.yScale').data(data[2].y);
+	var yScale = svg.viz.selectAll('path.yScale').data(appData.formatted[2].y);
 	yScale.enter()
 			.append('path')
 			.attr('class', '_3d yScale')
@@ -422,7 +473,7 @@ function processData(data, tt) {
 	yScale.exit().remove();
 
 	/* ----------- y-Scale Text ----------- */
-	var yText = viz.selectAll('text.yText').data(data[2].y[0]);
+	var yText = svg.viz.selectAll('text.yText').data(appData.formatted[2].y[0]);
 
 	yText.enter()
 			.append('text')
@@ -450,7 +501,7 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- x-Scale Text ----------- */
-	var xText = viz.selectAll('text.xText').data(data[2].x[0]);
+	var xText = svg.viz.selectAll('text.xText').data(appData.formatted[2].x[0]);
 
 	xText.enter()
 			.append('text')
@@ -480,7 +531,7 @@ function processData(data, tt) {
 	// Debugging scale relativity
 		// Should remove all calculations if we don't want to display
 	/* ----------- z-Scale Text ----------- */
-	var zText = viz.selectAll('text.zText').data(data[2].z[0]);
+	var zText = svg.viz.selectAll('text.zText').data(appData.formatted[2].z[0]);
 
 	zText.enter()
 			.append('text')
@@ -515,61 +566,61 @@ function initTimelineUI() {
 	// Initialize the timeline component
 		// Sizing/scaling handled on resize
 	var playheadY = -35;
-	timelineBG = timeline.append('rect')
+	timelineConfig.bg = svg.timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('class', 'timeline-bg')
 			.call(d3.drag()
 						.on('drag', timeDragged)
 						.on('start', timeDragStart))
 
-	timelineHist = timeline.append('rect')
+	timelineConfig.hist = svg.timeline.append('rect')
 			.attr('y', playheadY)
 			.attr('height', -playheadY)
 			.attr('class', 'timeline-history cant-touch')
 
-	timelineLabel = timeline.append('text')
+	timelineConfig.label = svg.timeline.append('text')
 			.text('Hours from primary event')
 			.attr('y', '50')
 			.attr('text-anchor', 'middle')
-	timelineAxis = timeline.append('g')
+	timelineConfig.axis = svg.timeline.append('g')
 			.attr("id", "timeAxis")
 
-	playhead = timeline.append('g')
+	svg.playhead = svg.timeline.append('g')
 					.attr('id', 'playhead')
 					.attr('class', 'cant-touch')
 
-	playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
+	svg.playhead.append('path').attr('d', 'M5,21.38a1.5,1.5,0,0,1-1.15-.54l-3-3.6a1.5,1.5,0,0,1-.35-1V3A2.5,2.5,0,0,1,3,.5H7A2.5,2.5,0,0,1,9.5,3V16.28a1.5,1.5,0,0,1-.35,1l-3,3.6A1.5,1.5,0,0,1,5,21.38Z')
 					.attr('class', 'playhead-body')
-	playhead.append('path').attr('d', 'M3,7.5H7')
+	svg.playhead.append('path').attr('d', 'M3,7.5H7')
 					.attr('class', 'playhead-stroke')
-	playhead.append('path').attr('d', 'M3,9.5H7')
+	svg.playhead.append('path').attr('d', 'M3,9.5H7')
 					.attr('class', 'playhead-stroke')
-	playhead.append('path').attr('d', 'M3,11.5H7')
+	svg.playhead.append('path').attr('d', 'M3,11.5H7')
 					.attr('class', 'playhead-stroke')
 }
 
 function movePlayhead(){
 	var playheadW = 10;
-	var hoursElapsed = scale2d.time.invert(anim.progress) * timeUnit;
-	var playheadPosX = (timelinePadding - (playheadW/2)) + scale2d.timeline(hoursElapsed);
+	var hoursElapsed = scale2d.time.invert(anim.progress) * timelineConfig.unit;
+	var playheadPosX = (timelineConfig.pad - (playheadW/2)) + scale2d.timeline(hoursElapsed);
 	var playheadPosY = -30;
-	playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
+	svg.playhead.attr('transform', 'translate(' + playheadPosX + ', ' + playheadPosY + ')');
 
 	moveHistory(playheadPosX + (playheadW/2), hoursElapsed);
 }
 
 function moveHistory(pos, elapsed){
 	var historyScale;
-	var historyX = timelinePadding;
-	if (historyRange == null || historyRange > elapsed) {
+	var historyX = timelineConfig.pad;
+	if (inputs.maxHist == null || inputs.maxHist > elapsed) {
 		// If history is not specified, or exceeds current playhead, scale from 0 position
-		historyScale = scale2d.scrub.invert(anim.progress) - timelinePadding;
+		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(historyRange / timeUnit)) - timelinePadding;
+		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timelineConfig.unit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
-	timelineHist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
+	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
 }
 
 function posPointX(d) { return d.projected.x; }
@@ -578,18 +629,18 @@ function magPoint (d) { return scale2d.mag(d.mag); }
 
 function updateDataArray() {
 	var axes = {
-		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([xLine]),
-		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([yLine]),
-		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([zLine])
+		x: scale3d.x.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.xLine]),
+		y: scale3d.y.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.yLine]),
+		z: scale3d.z.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.zLine])
 	};
-	var fault = scale3d.fault.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([faultPlane])
-	data = [
-		grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(xGrid),
-		point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(scatter),
+	var fault = scale3d.fault.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([faultPlane])
+	appData.formatted = [
+		space.grid3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.xGrid),
+		space.point3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.scatter),
 		axes,
 		fault
 	];
-	processData(data, 0);
+	processData(appData.formatted, 0);
 }
 
 
@@ -653,9 +704,9 @@ historyInput.addEventListener('change', function(e){
 function updateHistoryRange(num) {
 	if (num <= 0) {
 		historyInput.value = '';
-		historyRange = null;
+		inputs.maxHist = null;
 	} else {
-		historyRange = num;
+		inputs.maxHist = num;
 	}
 	updateDataArray();
 	movePlayhead();
@@ -666,11 +717,12 @@ function updateEventCount(num) {
 }
 
 function enableMagInput() {
-	magInput.min = magFloor;
-	magInput.max = magCeil;
+	magInput.min = appData.magFloor;
+	magInput.max = appData.magCeil;
 	magInput.disabled = false;
 	magInput.addEventListener('change', function(e){
 		if (magInput.value < magInput.min) { magInput.value = magInput.min; }
+		//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
 		fetchQuakeData(magInput.value);
 	});
 }
@@ -712,21 +764,22 @@ function rFront() {
 }
 
 //Data fetch
+	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
 fetchQuakeData(magInput.value);
-function fetchQuakeData(targetMag){
+function fetchQuakeData(magnitude){
 	var request	= new XMLHttpRequest(),
 			datapath	= './data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
 			console.log('Quake data received');
-			quakeData = JSON.parse(request.responseText).quakes;
+			appData.quakeRaw = JSON.parse(request.responseText).quakes;
 			// Get max/min bounds for all datapoints from full dataset
 			generateBounds();
 
 			// Limit active dataset based on GUI input
-			quakeData = quakeData.filter(function(quake) {
-				return quake.mag >= targetMag;
+			appData.quakeRaw = appData.quakeRaw.filter(function(quake) {
+				return quake.mag >= magnitude;
 			});
 
 
@@ -738,16 +791,16 @@ function fetchQuakeData(targetMag){
 }
 
 
-function fetchFaultData(targetMag){
+function fetchFaultData(){
 	var request	= new XMLHttpRequest(),
 			datapath	= './fault-data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
 			console.log('Fault data received');
-			faultData = JSON.parse(request.responseText).fault;
+			appData.faultRaw = JSON.parse(request.responseText).fault;
 
-			if (quakeData.length > 1) {
+			if (appData.quakeRaw.length > 1) {
 				init();
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
 
