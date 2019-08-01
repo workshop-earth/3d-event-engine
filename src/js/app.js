@@ -7,16 +7,18 @@ var j = 6.5,
 	timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
-var grid3d,
-	point3d,
-	largerAxis,
-	gridEdgeBuffer,
-	xGrid,
-	scatter,
-	yLine,
-	xLine,
-	zLine,
+var gridEdgeBuffer,
 	faultPlane;
+
+var space = {
+	grid3d: null,
+	point3d: null,
+	xGrid: null,
+	scatter: null,
+	yLine: null,
+	xLine: null,
+	zLine: null
+}
 
 var svg = {
 	root: null,
@@ -120,7 +122,7 @@ function generateBounds() {
 	var absZ = Math.abs(appData.zFloor - appData.zCeil);
 	var absY = Math.abs(appData.yFloor - appData.yCeil);
 	var largerAbs = Math.max(absX, absZ);
-	largerAxis = function(){
+	appData.largerAxis = function(){
 		return (absX >= absZ) ? 'x' : 'z';
 	}
 
@@ -222,12 +224,12 @@ function init() {
 		.domain([appData.yFloor, appData.yCeil])
 		.range([appData.yScaleMin, appData.yScaleMax]);
 
-	xGrid = [], scatter = [], yLine = [], xLine = [], zLine = [], faultPlane = [];
+	space.xGrid = [], space.scatter = [], space.yLine = [], space.xLine = [], space.zLine = [], faultPlane = [];
 	for(var z = -j; z < j; z++){
 		for(var x = -j; x < j; x++){
-			xGrid.push([x, 1, z]);
+			space.xGrid.push([x, 1, z]);
 			while (cnt < appData.quakeRaw.length) {
-				scatter.push({
+				space.scatter.push({
 					x:		scale2d.larger(appData.quakeRaw[cnt].x),
 					y:		scale2d.depth(appData.quakeRaw[cnt].y),
 					z:		scale2d.larger(appData.quakeRaw[cnt].z),
@@ -242,29 +244,29 @@ function init() {
 	var yScaleBuffer	= 0.75;
 	d3.range(appData.yScaleMin, appData.yScaleMax + yScaleBuffer, 0.8)
 		.forEach(function(d) {
-			yLine.push([-j, d, -j]);
+			space.yLine.push([-j, d, -j]);
 		});
 
 	// Keeps positioning relative in both dimensions on a square grid
-	if (largerAxis() == 'x') {
+	if (appData.largerAxis() == 'x') {
 		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -j]);
 			});
 
 		d3.range(scale2d.larger(appData.xFloor), scale2d.larger(appData.xCeil), 1)
 			.forEach(function(d) {
-				zLine.push([-j, 0, d]);
+				space.zLine.push([-j, 0, d]);
 			});
-	} else if (largerAxis() == 'z') {
+	} else if (appData.largerAxis() == 'z') {
 		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				xLine.push([d, 0, -j]);
+				space.xLine.push([d, 0, -j]);
 			});
 
 		d3.range(scale2d.larger(appData.zFloor), scale2d.larger(appData.zCeil), 1)
 			.forEach(function(d) {
-				zLine.push([-j, 0, d]);
+				space.zLine.push([-j, 0, d]);
 			});
 	} else {
 		console.log('Could not resolve x/z axis ranges');
@@ -298,7 +300,7 @@ function sizeScale() {
 	svg.hit.attr('height', viewport.height)
 					.attr('width', viewport.width)
 
-	grid3d = d3._3d()
+	space.grid3d = d3._3d()
 		.shape('GRID', j*2)
 		.origin(origin)
 		.rotateY( startAngleY)
@@ -309,7 +311,7 @@ function sizeScale() {
 			return scale2d.depth(0)
 		});
 
-	point3d = d3._3d()
+	space.point3d = d3._3d()
 		.x(function(d){ return d.x; })
 		.y(function(d){ return d.y; })
 		.z(function(d){ return d.z; })
@@ -357,11 +359,11 @@ function sizeScale() {
 
 	// Create a single scale for x/z axes based on the larger range
 		// Keeps positioning relative in both dimensions on a square grid
-	if (largerAxis() == 'x') {
+	if (appData.largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.xFloor - gridEdgeBuffer, appData.xCeil + gridEdgeBuffer])
 			.range([-j, j - 1]);
-	} else if (largerAxis() == 'z') {
+	} else if (appData.largerAxis() == 'z') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.zFloor - gridEdgeBuffer, appData.zCeil + gridEdgeBuffer])
 			.range([-j, j - 1]);
@@ -406,15 +408,15 @@ function processData(data, tt) {
 	var key	= function(d){ return d.id; };
 
 	/* ----------- GRID ----------- */
-	var xGrid = svg.viz.selectAll('path.grid').data(appData.formatted[0], key);
+	var grid = svg.viz.selectAll('path.grid').data(appData.formatted[0], key);
 
-	xGrid.enter()
+	grid.enter()
 			.append('path')
 			.attr('class', '_3d grid grid-panel')
-			.merge(xGrid)
-			.attr('d', grid3d.draw);
+			.merge(grid)
+			.attr('d', space.grid3d.draw);
 
-	xGrid.exit().remove();
+	grid.exit().remove();
 
 	/* ----------- POINTS ----------- */
 	// Filter data based on time/progress and active history range, controlling array over time
@@ -624,14 +626,14 @@ function magPoint (d) { return scale2d.mag(d.mag); }
 
 function updateDataArray() {
 	var axes = {
-		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([xLine]),
-		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([yLine]),
-		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([zLine])
+		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.xLine]),
+		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.yLine]),
+		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.zLine])
 	};
 	var fault = scale3d.fault.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([faultPlane])
 	appData.formatted = [
-		grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(xGrid),
-		point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(scatter),
+		space.grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(space.xGrid),
+		space.point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(space.scatter),
 		axes,
 		fault
 	];
