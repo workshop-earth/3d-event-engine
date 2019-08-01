@@ -1,13 +1,9 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var startAngle = Math.PI/5,
-	startAngleY = startAngle,
-	startAngleX = -startAngle / 5,
-	timeUnit = 1/60/60; // Convert playback scale to hours
+var timeUnit = 1/60/60; // Convert playback scale to hours
 
 // Uninitialized variables
-var gridEdgeBuffer,
-	faultPlane;
+var faultPlane;
 
 var space = {
 	grid3d: null,
@@ -17,7 +13,8 @@ var space = {
 	scatter: null,
 	yLine: null,
 	xLine: null,
-	zLine: null
+	zLine: null,
+	buffer: null
 }
 
 var svg = {
@@ -84,6 +81,13 @@ var scale3d = {
 }
 
 var orbit = {
+	startAngle: Math.PI/5,
+	startAngleY: function() {
+		return this.startAngle;
+	},
+	startAngleX: function() {
+		return (this.startAngle / 5) * -1;
+	},
 	alpha: 0,
 	beta: 0,
 	mx: null,
@@ -128,7 +132,7 @@ function generateBounds() {
 
 	var rangeYRatio = absY / largerAbs;
 	appData.yScaleMax = (space.unit * 2 - 1) * rangeYRatio;
-	gridEdgeBuffer = Math.max(appData.xMean, appData.zMean);
+	space.buffer = Math.max(appData.xMean, appData.zMean);
 
 	enableMagInput();
 }
@@ -303,8 +307,8 @@ function sizeScale() {
 	space.grid3d = d3._3d()
 		.shape('GRID', space.unit * 2)
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
@@ -316,8 +320,8 @@ function sizeScale() {
 		.y(function(d){ return d.y; })
 		.z(function(d){ return d.z; })
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter);
 
@@ -330,8 +334,8 @@ function sizeScale() {
 	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
@@ -341,8 +345,8 @@ function sizeScale() {
 	scale3d.z = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 		.y(function(){
@@ -352,8 +356,8 @@ function sizeScale() {
 	scale3d.fault = d3._3d()
 		.shape('PLANE')
 		.origin(origin)
-		.rotateY( startAngleY)
-		.rotateX( startAngleX)
+		.rotateY( orbit.startAngleY())
+		.rotateX( orbit.startAngleX())
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter)
 
@@ -361,11 +365,11 @@ function sizeScale() {
 		// Keeps positioning relative in both dimensions on a square grid
 	if (appData.largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
-			.domain([appData.xFloor - gridEdgeBuffer, appData.xCeil + gridEdgeBuffer])
+			.domain([appData.xFloor - space.buffer, appData.xCeil + space.buffer])
 			.range([-space.unit, space.unit - 1]);
 	} else if (appData.largerAxis() == 'z') {
 		scale2d.larger = d3.scaleLinear()
-			.domain([appData.zFloor - gridEdgeBuffer, appData.zCeil + gridEdgeBuffer])
+			.domain([appData.zFloor - space.buffer, appData.zCeil + space.buffer])
 			.range([-space.unit, space.unit - 1]);
 	} else {
 		console.log('Could not resolve x/z axis ranges');
@@ -626,14 +630,14 @@ function magPoint (d) { return scale2d.mag(d.mag); }
 
 function updateDataArray() {
 	var axes = {
-		x: scale3d.x.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.xLine]),
-		y: scale3d.y.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.yLine]),
-		z: scale3d.z.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([space.zLine])
+		x: scale3d.x.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.xLine]),
+		y: scale3d.y.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.yLine]),
+		z: scale3d.z.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.zLine])
 	};
-	var fault = scale3d.fault.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)([faultPlane])
+	var fault = scale3d.fault.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([faultPlane])
 	appData.formatted = [
-		space.grid3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(space.xGrid),
-		space.point3d.rotateY(orbit.beta + startAngleY).rotateX(orbit.alpha + startAngleX)(space.scatter),
+		space.grid3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.xGrid),
+		space.point3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.scatter),
 		axes,
 		fault
 	];
