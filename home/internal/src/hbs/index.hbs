@@ -11,16 +11,7 @@
 	{{#if features}}
 	<ul class="features-list">
 		{{#each features}}
-		<li class="features-item">
-			<a href="{{path}}" class="features-link">
-				<img class="features-img" src="home/public/img/thumb/{{thumb}}" />
-				<div class="features-copy">
-					<h2 class="features-title">{{name}}</h2>
-					<p class="features-blurb">{{blurb}}</p>
-					{{#if disc}}<small class="features-disc">{{disc}}</small>{{/if}}
-				</div>
-		</a>
-		</li>
+		{{> homepage-feature }}
 		{{/each}}
 	</ul>
 	{{/if}}
