@@ -17,7 +17,7 @@ gulp.task('css', function(){
 										]
 									})
             .on('error', sass.logError))
-        .pipe(gulp.dest('built'));
+        .pipe(gulp.dest('../public'));
 });
 
 
@@ -31,7 +31,7 @@ gulp.task('hbs', function(){
         .pipe(rename({
             extname: '.html'
         }))
-    .pipe(gulp.dest('../'));
+    .pipe(gulp.dest('../../'));
 });
 
 
