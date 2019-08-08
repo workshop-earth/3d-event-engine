@@ -19,6 +19,10 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-sass": "^4.0.1",
-    "reset-css": "^4.0.1"
+    "reset-css": "^4.0.1",
+    "gulp-compile-handlebars": "^0.6.1",
+    "handlebars": "^4.0.12",
+    "handlebars-layouts": "^3.1.4",
+    "gulp-rename": "^1.4.0"
   }
 }
