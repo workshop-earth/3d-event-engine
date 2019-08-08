@@ -22,10 +22,10 @@ gulp.task('css', function(){
 
 
 gulp.task('hbs', function(){
-    gulp.src('src/hbs/**/*.hbs')
+    gulp.src('src/hbs/pages/**/*.hbs')
         .pipe(compilehbs(data.site, {
                             ignorePartials: true,
-                            batch: 'src/hbs/partials',
+                            batch: 'src/hbs/partials/',
                             helpers: {}
                         }))
         .pipe(rename({
