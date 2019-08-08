@@ -5,12 +5,12 @@
 			"description": "seo description"
 		},
 		"headline": "Workshop.earth",
-		"intro": "Toys and tools to visualize seismology concepts and data.",
+		"intro": "Tools to visualize seismology concepts and data.",
 		"features": [
 			{
 				"name": "3D Events Engine",
 				"path": "/3d-events-over-time",
-				"thumb": "https://via.placeholder.com/300x200",
+				"thumb": "3d-events-thumb.jpg",
 				"blurb": "Blah blah blah"
 			}
 		]

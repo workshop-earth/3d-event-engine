@@ -4,10 +4,14 @@ $mod: 'features';
 }
 .#{$mod}-item {
 	background: whitesmoke;
+	border: 2px solid #eee;
 	border-radius: 7px;
 	overflow: hidden;
 	box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-
+}
+.#{$mod}-img {
+	width: 300px;
+	height: auto;
 }
 .#{$mod}-link {
 	text-decoration: none;
@@ -17,7 +21,7 @@ $mod: 'features';
 	color: black;
 }
 .#{$mod}-copy {
-	padding: 1em 1em 2em;
+	padding: 1em 1em 1.4em;
 }
 .#{$mod}-title {
 	text-decoration: underline;
