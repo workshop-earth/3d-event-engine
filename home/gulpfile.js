@@ -37,10 +37,11 @@ gulp.task('hbs', function(){
 
 gulp.task('watch', function(){
     gulp.watch('src/scss/style.scss', ['css']);
+    gulp.watch('src/hbs/**/*.hbs', ['hbs']);
 });
 
 
-gulp.task('build', ['css'], function(){
+gulp.task('build', ['css', 'hbs'], function(){
     console.log('Building site...');
     return
 });

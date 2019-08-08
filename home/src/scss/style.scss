@@ -3,3 +3,27 @@
 *, *:before, *:after {
 	box-sizing: border-box;
 }
+
+html {
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+h1 {
+	font-size: 2em;
+	margin-top: 4em;
+}
+
+h2 {
+	font-size: 1.3em;
+}
+
+
+.viz-list {
+	margin-top: 1em;
+}
