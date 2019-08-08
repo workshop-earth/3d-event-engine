@@ -1,0 +1,24 @@
+{
+  "name": "ridgecrest-sequence",
+  "version": "1.0.0",
+  "description": "Toys and tools to visualize seismology concepts and data.",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahudson87/ridgecrest-sequence.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ahudson87/ridgecrest-sequence/issues"
+  },
+  "homepage": "https://github.com/ahudson87/ridgecrest-sequence#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-sass": "^4.0.1",
+    "reset-css": "^4.0.1"
+  }
+}
