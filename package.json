@@ -1,5 +1,5 @@
 {
-  "name": "ridgecrest-sequence",
+  "name": "3d-event-engine",
   "version": "1.0.0",
   "description": "This D3 powered visualization plots earthquake data in 3D space",
   "main": "index.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ahudson87/ridgecrest-sequence.git"
+    "url": "git+https://github.com/workshop-earth/3d-event-engine.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ahudson87/ridgecrest-sequence/issues"
+    "url": "https://github.com/workshop-earth/3d-event-engine/issues"
   },
-  "homepage": "https://github.com/ahudson87/ridgecrest-sequence#readme",
+  "homepage": "https://github.com/workshop-earth/3d-event-engine#readme",
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-env": "^7.5.5",

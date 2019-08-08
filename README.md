@@ -19,4 +19,4 @@ This D3 powered visualization plots earthquake data in [3D space.](https://githu
 On July 5th 2019 a magnitude 7.1 earthquake struck Ridgecrest, CA. Effects were felt for miles and aftershocks were numerous. It's scale is visualized here.
 
 Currently the engine is hard-coded with this specific dataset. Future roadmap for this engine is to support dataset import.
-https://ridgecrest-sequence.netlify.com/
+https://3d-event-engine.netlify.com/
