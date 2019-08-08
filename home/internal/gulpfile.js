@@ -9,7 +9,7 @@ const   gulp	= require('gulp'),
 
 
 gulp.task('css', function(){
-    return gulp.src('src/scss/style.scss')
+    return gulp.src('src/scss/**/*.scss')
         .pipe(sass({
 										outputStyle: 'compressed',
 										includePaths: [
@@ -36,7 +36,7 @@ gulp.task('hbs', function(){
 
 
 gulp.task('watch', function(){
-    gulp.watch('src/scss/style.scss', ['css']);
+    gulp.watch('src/scss/**/*.scss', ['css']);
     gulp.watch('src/hbs/**/*.hbs', ['hbs']);
 });
 

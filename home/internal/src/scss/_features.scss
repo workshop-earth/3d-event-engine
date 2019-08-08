@@ -1,0 +1,25 @@
+$mod: 'features';
+.#{$mod}-list {
+	margin-top: 2em;
+}
+.#{$mod}-item {
+	background: whitesmoke;
+	border-radius: 7px;
+	overflow: hidden;
+	box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+
+}
+.#{$mod}-link {
+	text-decoration: none;
+	display: block;
+	height: 100%;
+	width: 100%;
+	color: black;
+}
+.#{$mod}-copy {
+	padding: 1em 1em 2em;
+}
+.#{$mod}-title {
+	text-decoration: underline;
+	margin-bottom: 0.7em;
+}

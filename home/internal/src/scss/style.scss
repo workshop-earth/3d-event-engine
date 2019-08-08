@@ -16,14 +16,11 @@ body {
 
 h1 {
 	font-size: 2em;
-	margin-top: 4em;
 }
 
 h2 {
 	font-size: 1.3em;
 }
 
-
-.features-list {
-	margin-top: 1em;
-}
+@import 'hero';
+@import 'features';
