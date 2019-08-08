@@ -1,7 +1,13 @@
 {
 	"site": {
 		"meta": {
-			"name": "Earth Science Playground"
-		}
+			"name": "Workshop.earth"
+		},
+		"features": [
+			{
+				"name": "3D Events Engine",
+				"path": "/3d-events-over-time"
+			}
+		]
 	}
 }

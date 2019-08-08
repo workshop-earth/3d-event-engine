@@ -7,8 +7,12 @@
 </head>
 <body>
 	<h1>{{meta.name}}</h1>
-	<ul class="viz-list">
-		<a href="/3d-events-over-time/public"><h2>3D Events Engine</h2></a>
+	{{#if features}}
+	<ul class="features-list">
+		{{#each features}}
+		<a href="{{path}}/public"><h2>{{name}}</h2></a>
+		{{/each}}
 	</ul>
+	{{/if}}
 </body>
 </html>
