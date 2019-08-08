@@ -6,6 +6,7 @@
 
 html {
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 18px;
 }
 
 body {
@@ -15,11 +16,23 @@ body {
 }
 
 h1 {
-	font-size: 2em;
+	font-size: 2.2em;
 }
 
 h2 {
-	font-size: 1.3em;
+	font-size: 1.6em;
+}
+
+p {
+	font-size: 1em;
+	line-height: 1.4;
+}
+
+small {
+	font-size: 0.7em;
+	color: gray;
+	line-height: 1.4;
+	letter-spacing: 0.05em;
 }
 
 @import 'hero';

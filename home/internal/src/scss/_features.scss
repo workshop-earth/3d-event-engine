@@ -8,9 +8,10 @@ $mod: 'features';
 	border-radius: 7px;
 	overflow: hidden;
 	box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+	width: 300px;
 }
 .#{$mod}-img {
-	width: 300px;
+	width: 100%;
 	height: auto;
 }
 .#{$mod}-link {
@@ -26,4 +27,8 @@ $mod: 'features';
 .#{$mod}-title {
 	text-decoration: underline;
 	margin-bottom: 0.7em;
+}
+.#{$mod}-disc {
+	display: block;
+	margin-top: 1em;
 }
