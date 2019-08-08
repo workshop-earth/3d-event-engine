@@ -14,7 +14,7 @@ gulp.task('js', function(){
     // .pipe(babel({
     //         presets: ['@babel/env']
     //     }))
-    .pipe(gulp.dest('public'));
+    .pipe(gulp.dest('../public'));
 });
 
 
@@ -27,7 +27,7 @@ gulp.task('css', function(){
 										]
 									})
             .on('error', sass.logError))
-        .pipe(gulp.dest('public'));
+        .pipe(gulp.dest('../public'));
 });
 
 gulp.task('watch', function(){
@@ -39,7 +39,7 @@ gulp.task('watch', function(){
 gulp.task('data', function(){
     return gulp.src(['data/data.json',
                      'data/fault-data.json'])
-        .pipe(gulp.dest('public'));
+        .pipe(gulp.dest('../public'));
 });
 
 gulp.task('build', ['js', 'css', 'data'], function(){

@@ -768,7 +768,7 @@ function rFront() {
 fetchQuakeData(magInput.value);
 function fetchQuakeData(magnitude){
 	var request	= new XMLHttpRequest(),
-			datapath	= './data.json';
+			datapath	= './public/data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -793,7 +793,7 @@ function fetchQuakeData(magnitude){
 
 function fetchFaultData(){
 	var request	= new XMLHttpRequest(),
-			datapath	= './fault-data.json';
+			datapath	= './public/fault-data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
