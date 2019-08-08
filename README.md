@@ -1,3 +1,3 @@
-# Earth Science Playground
+# Workshop.earth
 
 Tools to visualize seismology concepts and data.
