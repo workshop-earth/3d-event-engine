@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ugly": "uglifyjs ./public/app.js -o ./public/app.js -c -m"
+    "ugly": "uglifyjs ./public/app.js -o ./public/app.js -c -m",
+    "serve": "http-server ./public"
   },
   "repository": {
     "type": "git",
