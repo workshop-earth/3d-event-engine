@@ -9,7 +9,9 @@ This D3 powered visualization plots earthquake data in [3D space.](https://githu
 * Time-based playback can be paused/scrubbed/replayed
 
 ##Preview
+
 [![Netlify Status](https://api.netlify.com/api/v1/badges/8c38e76a-9345-4978-ab2f-dcd53c6d8f6a/deploy-status)](https://app.netlify.com/sites/3d-event-engine/deploys)
+
 https://3d-event-engine.netlify.app/
 
 ## Development
