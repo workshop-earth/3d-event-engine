@@ -275,11 +275,16 @@ function init() {
 		console.log('Could not resolve x/z axis ranges');
 	}
 
+	// Generate sets for each subfault
 	// **TODO: Get real fault data into fault-data.json
-	appData.faultRaw.forEach(function(point){
-		var arr = [scale2d.larger(point.x), scale2d.depth(point.y), scale2d.larger(point.z)];
-		faultPlane.push(arr);
-	});
+	appData.faultRaw.forEach(function(subfault){
+		var subfaultPlane = [];
+		subfault.forEach(function(point){
+			var arr = [scale2d.larger(point.x), scale2d.depth(point.y), scale2d.larger(point.z)];
+			subfaultPlane.push(arr);
+		});
+		faultPlane.push(subfaultPlane);
+	})
 
 	// Start RAF loop
 	anim.req = requestAnimationFrame(step);
@@ -453,14 +458,17 @@ function processData(data, tt) {
 	points.exit().remove();
 
 	/* ----------- Fault Plane ----------- */
-	var faultPlane = svg.viz.selectAll('path.fault').data(appData.formatted[3]);
-	faultPlane.enter()
-			.append('path')
-			.attr('class', '_3d fault')
-			.merge(faultPlane)
-			.attr('d', scale3d.fault.draw);
+	// Loop fault data for all subfaults and draw unique polygon planes
+	appData.formatted[3].forEach(function(subfault, index){
+		var faultPath = svg.viz.selectAll('path.fault_' + index).data(subfault);
+		faultPath.enter()
+				.append('path')
+				.attr('class', '_3d fault fault_' + index)
+				.merge(faultPath)
+				.attr('d', scale3d.fault.draw);
 
-	faultPlane.exit().remove();
+		faultPath.exit().remove();
+	});
 
 	/* ----------- y-Scale ----------- */
 	var yScale = svg.viz.selectAll('path.yScale').data(appData.formatted[2].y);
@@ -633,7 +641,10 @@ function updateDataArray() {
 		y: scale3d.y.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.yLine]),
 		z: scale3d.z.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([space.zLine])
 	};
-	var fault = scale3d.fault.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([faultPlane])
+	var fault = [];
+	faultPlane.forEach(function(subfault){
+		fault.push(scale3d.fault.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())([subfault]));
+	});
 	appData.formatted = [
 		space.grid3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.xGrid),
 		space.point3d.rotateY(orbit.beta + orbit.startAngleY()).rotateX(orbit.alpha + orbit.startAngleX())(space.scatter),
@@ -798,7 +809,7 @@ function fetchFaultData(){
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
 			console.log('Fault data received');
-			appData.faultRaw = JSON.parse(request.responseText).fault;
+			appData.faultRaw = JSON.parse(request.responseText).subfaults;
 
 			if (appData.quakeRaw.length > 1) {
 				init();
