@@ -1,5 +1,6 @@
 @import 'reset';
 
+$white: #fff;
 $blue: #35a0f2;
 $yellow: #FFE933 ;
 $red: #D60041;
@@ -28,6 +29,11 @@ h1 {
 	position: absolute;
 	top: -100px;
 	left: -100px;
+}
+
+p {
+	line-height: 1.4;
+	letter-spacing: 0.01;
 }
 
 .viz-holder {
@@ -98,7 +104,8 @@ text {
 }
 
 .key,
-.ui {
+.ui,
+.info {
 	position: fixed;
 	top: 0;
 	padding: 1.5rem;
@@ -187,6 +194,60 @@ text {
 	}
 }
 
+
+
+.info {
+	width: 100%;
+	z-index: 9;
+	text-align: center;
+	padding-left: 0;
+	padding-right: 0;
+
+	.modal {
+		padding: 4em 0;
+		z-index: 1;
+		background: rgba(255,255,255,0.9);
+		height: 100vh;
+		top: 0;
+		position: absolute;
+		width: 100%;
+		transition: opacity 0.5s linear;
+		pointer-events: none;
+	}
+	.container {
+		text-align: left;
+		max-width: 650px;
+		margin: auto;
+		background: $white;
+		pointer-events: all;
+	}
+
+	&-toggle {
+		display: none;
+
+		&:checked ~ .modal {
+			opacity: 0;
+		}
+		&:checked ~ .info-ui .info-close {
+			transform: rotate(45deg);
+		}
+	}
+
+	&-ui {
+		cursor: pointer;
+		display: inline-block;
+		z-index: 3;
+		position: relative;
+	}
+	&-close {
+		margin-left: -0.2em;
+	}
+
+	.icon {
+		width: 1.5em;
+		transition: transform 0.2s ease-in-out;
+	}
+}
 
 
 
