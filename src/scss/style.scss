@@ -50,6 +50,8 @@ circle {
 	stroke-opacity: 0.6;
 }
 
+.fault,
+.fault-key rect,
 path, line {
 	stroke: black;
 	stroke-opacity: 0.2;
@@ -92,10 +94,12 @@ text {
 	user-select: none;
 }
 
+.fault-key rect,
 .fault {
 	fill: black;
 	fill-opacity: 0.03;
 }
+
 
 .key,
 .ui {
@@ -164,7 +168,7 @@ text {
 		font-size: 0.75rem;
 		&.color-range {
 			display: block;
-			margin-top: 0.2rem;
+			margin-top: 0.3rem;
 			&-circle {
 				display: inline-block;
 				border-radius: 100px;
@@ -185,8 +189,20 @@ text {
 			}
 		}
 	}
+	.subfaults {
+		display: inline-block;
+		margin-top: 0.3rem;
+	}
+	.fault-key {
+		position: relative;
+		top: 0.35rem;
+		margin-left: 0.15rem;
+		& rect {
+			stroke-opacity: 0.6;
+			transform: skewX(20deg);
+		}
+	}
 }
-
 
 
 
