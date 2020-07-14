@@ -1,5 +1,20 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
+
+// On first load:
+// Pause triggering the animation frame until modal is closed
+var modalToggle = document.querySelector('#modalToggle');
+var modalOpen = !modalToggle.checked;
+var firstRun = true;
+modalToggle.addEventListener('click', toggleModal);
+function toggleModal() {
+	if (modalOpen && firstRun == true) {
+		anim.req = requestAnimationFrame(step);
+	}
+	firstRun = false;
+	modalOpen = !modalOpen;
+}
+
 // Uninitialized variables
 var faultPlane;
 
@@ -282,7 +297,9 @@ function init() {
 	});
 
 	// Start RAF loop
-	anim.req = requestAnimationFrame(step);
+	if (!modalOpen) {
+		anim.req = requestAnimationFrame(step);
+	}
 }
 
 
@@ -681,6 +698,7 @@ function dragEnd(){
 	orbit.mouseX = d3.event.x - orbit.mx + orbit.mouseX;
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
+
 
 var magInput = document.querySelector('#magInput');
 var historyInput = document.querySelector('#historyInput');
