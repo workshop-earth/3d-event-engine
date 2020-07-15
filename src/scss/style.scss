@@ -5,6 +5,8 @@ $blue: #35a0f2;
 $yellow: #FFE933 ;
 $red: #D60041;
 $green: #8ded26;
+$gray: #A9A9A9;
+$black: #000;
 
 html {
 	height: 100vh;
@@ -58,7 +60,7 @@ circle {
 }
 
 path, line {
-	stroke: black;
+	stroke: $black;
 	stroke-opacity: 0.2;
 	stroke-width: 0.4;
 }
@@ -90,7 +92,7 @@ path, line {
 }
 
 text {
-	fill: black;
+	fill: $black;
 	fill-opacity: 0.4;
 	font-size: 13px;
 	-webkit-user-select: none;
@@ -100,7 +102,7 @@ text {
 }
 
 .fault {
-	fill: black;
+	fill: $black;
 	fill-opacity: 0.03;
 }
 
@@ -195,7 +197,9 @@ text {
 	}
 }
 
-
+.inline-label {
+	fill: $gray;
+}
 
 .info {
 	width: 100%;

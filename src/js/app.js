@@ -67,7 +67,7 @@ var svg = {
 //**TODO: refactor min magnitude input into inputs object
 	// Treat filtering the same as history (on point plot instead of refetching every time)
 var inputs = {
-	maxHist: historyInput.value //null
+	maxHist: historyInput.value
 }
 
 var appData = {
@@ -373,6 +373,7 @@ function sizeScale() {
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter);
 
+
 	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
 		.origin(origin)
@@ -515,9 +516,32 @@ function processData(data, tt) {
 
 	yScale.exit().remove();
 
+
+	/* ----------- y-Label ----------- */
+	var middlePointY = appData.formatted[2].y[0].length / 2;
+	var yLabel = svg.viz.selectAll('text.yLabel').data(appData.formatted[2].y[0].slice(middlePointY - 1, middlePointY));
+	
+	yLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label yLabel')
+			.attr('dx', '-4em')
+			.attr('text-anchor', 'end')
+			.merge(yLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+
+	yLabel.exit().remove();
+
 	/* ----------- y-Scale Text ----------- */
 	var yText = svg.viz.selectAll('text.yText').data(appData.formatted[2].y[0]);
-
 	yText.enter()
 			.append('text')
 			.attr('class', '_3d yText')
@@ -544,8 +568,30 @@ function processData(data, tt) {
 	yText.exit().remove();
 
 
-	// Debugging scale relativity
-		// Should remove all calculations if we don't want to display
+	/* ----------- x-Label ----------- */
+	var middlePointX = appData.formatted[2].x[0].length / 2;
+	var xLabel = svg.viz.selectAll('text.xLabel').data(appData.formatted[2].x[0].slice(middlePointX - 1, middlePointX));
+	
+	xLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label xLabel')
+			.attr('dy', '-2.5em')
+			.attr('text-anchor', 'end')
+			.merge(xLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x - 1;
+			})
+			.attr('y', function(d){
+				return d.projected.y - 1;
+			})
+
+	xLabel.exit().remove();
+
+
 	/* ----------- x-Scale Text ----------- */
 	var xText = svg.viz.selectAll('text.xText').data(appData.formatted[2].x[0]);
 
@@ -574,8 +620,31 @@ function processData(data, tt) {
 
 	xText.exit().remove();
 
-	// Debugging scale relativity
-		// Should remove all calculations if we don't want to display
+	
+	/* ----------- z-Label ----------- */
+	var middlePointZ = appData.formatted[2].z[0].length / 2;
+	var zLabel = svg.viz.selectAll('text.zLabel').data(appData.formatted[2].z[0].slice(middlePointZ - 1, middlePointZ));
+	
+	zLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label zLabel')
+			.attr('dy', '-2.5em')
+			.attr('text-anchor', 'end')
+			.merge(zLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x - 1;
+			})
+			.attr('y', function(d){
+				return d.projected.y - 1;
+			})
+
+	zLabel.exit().remove();
+
+
 	/* ----------- z-Scale Text ----------- */
 	var zText = svg.viz.selectAll('text.zText').data(appData.formatted[2].z[0]);
 
@@ -770,7 +839,7 @@ toggleRanges.forEach(function(range){
 });
 
 function handleToggleRange(target) {
-	var targetClass = '.' + target.dataset.range + 'Text';
+	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label';
 	if (isRangeVisible(target)) {
 		document.querySelectorAll(targetClass).forEach(function(el){
 			el.style.display = "block";
