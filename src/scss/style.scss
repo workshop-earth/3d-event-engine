@@ -34,6 +34,7 @@ h1 {
 p {
 	line-height: 1.4;
 	letter-spacing: 0.01;
+	margin-top: 0.7rem;
 }
 
 .viz-holder {
@@ -217,10 +218,8 @@ text {
 	}
 	.container {
 		text-align: left;
-		max-width: 650px;
+		max-width: 31em;
 		margin: auto;
-		background: $white;
-		pointer-events: all;
 	}
 
 	&-toggle {
@@ -228,6 +227,10 @@ text {
 
 		&:checked ~ .modal {
 			opacity: 1;
+
+			.container {
+				pointer-events: all;
+			}
 		}
 		&:checked ~ .info-ui .info-close {
 			opacity: 1;
@@ -252,7 +255,7 @@ text {
 
 	&-preference-group {
 		font-size: 0.8em;
-		margin-top: 1em;
+		margin-top: 2em;
 
 		.info-preference {
 			margin-left: 0;
