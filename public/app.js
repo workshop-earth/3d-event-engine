@@ -1,6 +1,12 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-
+var magInput = document.querySelector('#magInput');
+var eventCount = document.querySelector('#eventCount');
+var btnViewBottom = document.querySelector('#btnViewBottom');
+var btnViewFront = document.querySelector('#btnViewFront');
+var btnReplay = document.querySelector('#btnReplay');
+var toggleRanges = document.querySelectorAll('[data-range]');
+var historyInput = document.querySelector('#historyInput');
 
 // Store info modal preference in localstorage
 var infoPrefInput = document.querySelector('#infoPreferenceToggle');
@@ -61,7 +67,7 @@ var svg = {
 //**TODO: refactor min magnitude input into inputs object
 	// Treat filtering the same as history (on point plot instead of refetching every time)
 var inputs = {
-	maxHist: null
+	maxHist: historyInput.value //null
 }
 
 var appData = {
@@ -719,22 +725,11 @@ function dragEnd(){
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
-
-var magInput = document.querySelector('#magInput');
-var historyInput = document.querySelector('#historyInput');
-var eventCount = document.querySelector('#eventCount');
-var btnViewBottom = document.querySelector('#btnViewBottom');
-var btnViewFront = document.querySelector('#btnViewFront');
-var btnReplay = document.querySelector('#btnReplay');
-var toggleRanges = document.querySelectorAll('[data-range]');
-
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
-
 btnReplay.addEventListener('click', function(){
 	init();
 });
-
 
 historyInput.addEventListener('change', function(e){
 	updateHistoryRange(e.target.value);
@@ -764,7 +759,6 @@ function enableMagInput() {
 		fetchQuakeData(magInput.value);
 	});
 }
-
 
 toggleRanges.forEach(function(range){
 	range.addEventListener('change', function(e) {
