@@ -506,6 +506,7 @@ function processData(data, tt) {
 
 	faultPlane.exit().remove();
 
+
 	/* ----------- y-Scale ----------- */
 	var yScale = svg.viz.selectAll('path.yScale').data(appData.formatted[2].y);
 	yScale.enter()
@@ -525,7 +526,7 @@ function processData(data, tt) {
 			.append('text')
 			.text('km')
 			.attr('class', '_3d inline-label yLabel')
-			.attr('dx', '-4em')
+			.attr('dx', '2em')
 			.attr('text-anchor', 'end')
 			.merge(yLabel)
 			.each(function(d){
@@ -576,17 +577,17 @@ function processData(data, tt) {
 			.append('text')
 			.text('km')
 			.attr('class', '_3d inline-label xLabel')
-			.attr('dy', '-2.5em')
-			.attr('text-anchor', 'end')
+			.attr('dy', '-3em')
+			.attr('text-anchor', 'center')
 			.merge(xLabel)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
 			})
 			.attr('x', function(d){
-				return d.projected.x - 1;
+				return d.projected.x;
 			})
 			.attr('y', function(d){
-				return d.projected.y - 1;
+				return d.projected.y;
 			})
 
 	xLabel.exit().remove();
@@ -629,17 +630,17 @@ function processData(data, tt) {
 			.append('text')
 			.text('km')
 			.attr('class', '_3d inline-label zLabel')
-			.attr('dy', '-2.5em')
+			.attr('dy', '-3em')
 			.attr('text-anchor', 'end')
 			.merge(zLabel)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
 			})
 			.attr('x', function(d){
-				return d.projected.x - 1;
+				return d.projected.x;
 			})
 			.attr('y', function(d){
-				return d.projected.y - 1;
+				return d.projected.y;
 			})
 
 	zLabel.exit().remove();
