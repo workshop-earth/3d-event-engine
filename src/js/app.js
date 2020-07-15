@@ -523,6 +523,9 @@ function processData(data, tt) {
 			.attr('class', '_3d yText')
 			.attr('dx', '-1em')
 			.attr('text-anchor', 'end')
+			.style('display', function(){
+				return isRangeVisible(document.querySelector('#showRangeY')) ? 'block' : 'none';
+			})
 			.merge(yText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
