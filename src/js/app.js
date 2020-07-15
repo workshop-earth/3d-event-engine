@@ -1,10 +1,30 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
 
+
+// Store info modal preference in localstorage
+var infoPrefInput = document.querySelector('#infoPreferenceToggle');
+var infoPreference;
+if (localStorage.getItem('infoPreference') === null) {
+	infoPreference = true;
+} else {
+	infoPreference = (localStorage.getItem('infoPreference') == 'true');
+}
+localStorage.setItem('infoPreference', infoPreference);
+infoPrefInput.checked = infoPreference;
+infoPrefInput.addEventListener('click', togglePreference);
+function togglePreference() {
+	infoPreference = infoPrefInput.checked;
+	localStorage.setItem('infoPreference', infoPreference);
+}
+
 // On first load:
 // Pause triggering the animation frame until modal is closed
 var modalToggle = document.querySelector('#modalToggle');
-var modalOpen = !modalToggle.checked;
+if (infoPreference == true) {
+	modalToggle.checked = true;
+}
+var modalOpen = modalToggle.checked;
 var firstRun = true;
 modalToggle.addEventListener('click', toggleModal);
 function toggleModal() {

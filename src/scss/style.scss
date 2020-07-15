@@ -213,6 +213,7 @@ text {
 		width: 100%;
 		transition: opacity 0.5s linear;
 		pointer-events: none;
+		opacity: 0;
 	}
 	.container {
 		text-align: left;
@@ -226,10 +227,10 @@ text {
 		display: none;
 
 		&:checked ~ .modal {
-			opacity: 0;
+			opacity: 1;
 		}
 		&:checked ~ .info-ui .info-close {
-			opacity: 0;
+			opacity: 1;
 		}
 	}
 
@@ -240,13 +241,27 @@ text {
 		position: relative;
 	}
 	&-close {
-		opacity: 1;
-		margin-left: -0.2em;
+		opacity: 0;
+		position: absolute;
 	}
 
 	.icon {
 		width: 1.5em;
 		transition: opacity 0.2s linear;
+	}
+
+	&-preference-group {
+		font-size: 0.8em;
+		margin-top: 1em;
+
+		.info-preference {
+			margin-left: 0;
+		}
+
+		label {
+			position: relative;
+			top: -0.15em;
+		}
 	}
 }
 
