@@ -630,6 +630,7 @@ function processData(data, tt) {
 			.append('text')
 			.text('km')
 			.attr('class', '_3d inline-label zLabel')
+			.attr('dx', '-3%')
 			.attr('dy', '-3em')
 			.attr('text-anchor', 'end')
 			.merge(zLabel)
