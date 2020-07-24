@@ -266,7 +266,8 @@ function init() {
 	appData.yScaleMin = 0;
 	scale2d.depth = d3.scaleLinear()
 		.domain([appData.yFloor, appData.yCeil])
-		.range([appData.yScaleMin, appData.yScaleMax]);
+		.range([appData.yScaleMin, appData.yScaleMax])
+		.nice();
 
 	space.xGrid = [], space.scatter = [], space.yLine = [], space.xLine = [], space.zLine = [], faultPlane = [];
 	for(var z = -space.unit; z < space.unit; z++){
@@ -409,11 +410,13 @@ function sizeScale() {
 	if (appData.largerAxis() == 'x') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.xFloor - space.buffer, appData.xCeil + space.buffer])
-			.range([-space.unit, space.unit - 1]);
+			.range([-space.unit, space.unit - 1])
+			.nice();
 	} else if (appData.largerAxis() == 'z') {
 		scale2d.larger = d3.scaleLinear()
 			.domain([appData.zFloor - space.buffer, appData.zCeil + space.buffer])
-			.range([-space.unit, space.unit - 1]);
+			.range([-space.unit, space.unit - 1])
+			.nice();
 	} else {
 		console.log('Could not resolve x/z axis ranges');
 	}
