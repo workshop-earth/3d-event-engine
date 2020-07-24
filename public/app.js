@@ -436,7 +436,7 @@ function sizeScale() {
 
 	const axisTime = d3.axisBottom(scale2d.timeline)
 									.ticks(30);
-	let timelineH = 125;
+	let timelineH = 100;
 
 	svg.timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
 	timelineConfig.bg.attr('x', timelineConfig.pad)
