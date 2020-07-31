@@ -1,17 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Ridgecrest Sequence</title>
+	<title>3D Events Engine</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<script src="https://unpkg.com/d3-3d/build/d3-3d.js"></script>
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-	<h1>Ridgecrest Magnitude 7.1</h1>
+	<h1>Workshop Earth 3D Events Engine</h1>
+	<section class="info">
+		<input type="checkbox" class="info-toggle" id="modalToggle">
+		<label class="info-ui" for="modalToggle">
+			<img class="icon info-icon" src="img/icon-info.svg"/>
+			<img class="icon info-close" src="img/icon-close.svg"/>
+		</label>
+		<div class="modal">
+			<div class="container">
+				<p>Welcome to the interactive 3D Seismic Event Visualizer. Observe events in 3D space by clicking-and-dragging the graph below. Click-and-drag the timeline at the bottom to scrub through time elapsed from the original event.</p>
+
+				<p>Use the interface to the right to manipulate the data visualization. Limit the dataset based on minimum magnitude and viewable window of time in hours.</p>
+
+				<p>You can also show or hide axis values, change between fixed views, and restart time-base playback.</p>
+
+				<div class="info-preference-group">
+					<input type="checkbox" class="info-preference" id="infoPreferenceToggle" />
+					<label for="infoPreferenceToggle">Show this info everytime I use this app</label>
+				</div>
+			</div>
+		</div>
+	</section>
 	<div id="vizHolder" class="viz-holder"></div>
 	<div class="key">
-		<span>*values in km</span>
 		<span class="color-range">
 			older
 			<span class="color-range-circle older"></span>
@@ -25,16 +45,19 @@
 	<div class="ui">
 		<div class="ui-count"><span id="eventCount" class="event-count">0</span> events shown</div>
 		<div class="ui-input">
-			<input type="number" id="magInput" min="2.5" value="4" step="0.05" disabled /><label for="magInput">Min Mag</label>
+			<input type="number" id="magInput" min="2.5" value="3.5" step="0.05" disabled /><label for="magInput">Min Mag</label>
 		</div>
 		<div class="ui-input">
-			<input type="number" id="historyInput" min="5" step="1" /><label for="historyInput">History (hrs)</label>
+			<input type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)</label>
 		</div>
 		<div class="ui-checkbox">
-			<input type="checkbox" id="showRangeX" data-range="x" /><label for="showRangeX">Show X Range</label>
+			<input type="checkbox" id="showRangeX" data-range="x" checked /><label for="showRangeX">Show X Range</label>
 		</div>
 		<div class="ui-checkbox">
-			<input type="checkbox" id="showRangeZ" data-range="z" /><label for="showRangeZ">Show Z Range</label>
+			<input type="checkbox" id="showRangeZ" data-range="z" checked /><label for="showRangeZ">Show Z Range</label>
+		</div>
+		<div class="ui-checkbox">
+			<input type="checkbox" id="showRangeY" data-range="y" checked /><label for="showRangeY">Show Y Range</label>
 		</div>
 		<div class="buttons">
 			<button id="btnViewFront">View Front</button>

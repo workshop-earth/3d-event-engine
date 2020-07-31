@@ -1,9 +1,12 @@
 @import 'reset';
 
+$white: #fff;
 $blue: #35a0f2;
 $yellow: #FFE933 ;
 $red: #D60041;
 $green: #8ded26;
+$gray: #A9A9A9;
+$black: #000;
 
 html {
 	height: 100vh;
@@ -30,6 +33,12 @@ h1 {
 	left: -100px;
 }
 
+p {
+	line-height: 1.4;
+	letter-spacing: 0.01;
+	margin-top: 0.7rem;
+}
+
 .viz-holder {
 	width: 100vw;
 	height: 100vh;
@@ -51,7 +60,7 @@ circle {
 }
 
 path, line {
-	stroke: black;
+	stroke: $black;
 	stroke-opacity: 0.2;
 	stroke-width: 0.4;
 }
@@ -83,7 +92,7 @@ path, line {
 }
 
 text {
-	fill: black;
+	fill: $black;
 	fill-opacity: 0.4;
 	font-size: 13px;
 	-webkit-user-select: none;
@@ -93,12 +102,13 @@ text {
 }
 
 .fault {
-	fill: black;
+	fill: $black;
 	fill-opacity: 0.03;
 }
 
 .key,
-.ui {
+.ui,
+.info {
 	position: fixed;
 	top: 0;
 	padding: 1.5rem;
@@ -187,6 +197,81 @@ text {
 	}
 }
 
+.inline-label {
+	fill: $gray;
+}
+
+.info {
+	width: 100%;
+	z-index: 9;
+	text-align: center;
+	padding-left: 0;
+	padding-right: 0;
+	padding-bottom: 0;
+
+	.modal {
+		padding: 4em 0;
+		z-index: 1;
+		background: rgba(255,255,255,0.9);
+		height: 100vh;
+		top: 0;
+		position: absolute;
+		width: 100%;
+		transition: opacity 0.5s linear;
+		pointer-events: none;
+		opacity: 0;
+	}
+	.container {
+		text-align: left;
+		max-width: 31em;
+		margin: auto;
+	}
+
+	&-toggle {
+		display: none;
+
+		&:checked ~ .modal {
+			opacity: 1;
+
+			.container {
+				pointer-events: all;
+			}
+		}
+		&:checked ~ .info-ui .info-close {
+			opacity: 1;
+		}
+	}
+
+	&-ui {
+		cursor: pointer;
+		display: inline-block;
+		z-index: 3;
+		position: relative;
+	}
+	&-close {
+		opacity: 0;
+		position: absolute;
+	}
+
+	.icon {
+		width: 1.5em;
+		transition: opacity 0.2s linear;
+	}
+
+	&-preference-group {
+		font-size: 0.8em;
+		margin-top: 2em;
+
+		.info-preference {
+			margin-left: 0;
+		}
+
+		label {
+			position: relative;
+			top: -0.15em;
+		}
+	}
+}
 
 
 

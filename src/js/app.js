@@ -1,5 +1,46 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
+var magInput = document.querySelector('#magInput');
+var eventCount = document.querySelector('#eventCount');
+var btnViewBottom = document.querySelector('#btnViewBottom');
+var btnViewFront = document.querySelector('#btnViewFront');
+var btnReplay = document.querySelector('#btnReplay');
+var toggleRanges = document.querySelectorAll('[data-range]');
+var historyInput = document.querySelector('#historyInput');
+
+// Store info modal preference in localstorage
+var infoPrefInput = document.querySelector('#infoPreferenceToggle');
+var infoPreference;
+if (localStorage.getItem('infoPreference') === null) {
+	infoPreference = true;
+} else {
+	infoPreference = (localStorage.getItem('infoPreference') == 'true');
+}
+localStorage.setItem('infoPreference', infoPreference);
+infoPrefInput.checked = infoPreference;
+infoPrefInput.addEventListener('click', togglePreference);
+function togglePreference() {
+	infoPreference = infoPrefInput.checked;
+	localStorage.setItem('infoPreference', infoPreference);
+}
+
+// On first load:
+// Pause triggering the animation frame until modal is closed
+var modalToggle = document.querySelector('#modalToggle');
+if (infoPreference == true) {
+	modalToggle.checked = true;
+}
+var modalOpen = modalToggle.checked;
+var firstRun = true;
+modalToggle.addEventListener('click', toggleModal);
+function toggleModal() {
+	if (modalOpen && firstRun == true) {
+		anim.req = requestAnimationFrame(step);
+	}
+	firstRun = false;
+	modalOpen = !modalOpen;
+}
+
 // Uninitialized variables
 var faultPlane;
 
@@ -26,7 +67,7 @@ var svg = {
 //**TODO: refactor min magnitude input into inputs object
 	// Treat filtering the same as history (on point plot instead of refetching every time)
 var inputs = {
-	maxHist: null
+	maxHist: historyInput.value
 }
 
 var appData = {
@@ -282,7 +323,9 @@ function init() {
 	});
 
 	// Start RAF loop
-	anim.req = requestAnimationFrame(step);
+	if (!modalOpen) {
+		anim.req = requestAnimationFrame(step);
+	}
 }
 
 
@@ -329,6 +372,7 @@ function sizeScale() {
 		.origin(origin)
 		.scale(viewport.scale)
 		.rotateCenter(orbit.rotateCenter);
+
 
 	scale3d.x = d3._3d()
 		.shape('LINE_STRIP')
@@ -392,7 +436,7 @@ function sizeScale() {
 
 	const axisTime = d3.axisBottom(scale2d.timeline)
 									.ticks(30);
-	let timelineH = 125;
+	let timelineH = 100;
 
 	svg.timeline.attr("transform", "translate(0," + (viewport.height - timelineH) + ")");
 	timelineConfig.bg.attr('x', timelineConfig.pad)
@@ -462,6 +506,7 @@ function processData(data, tt) {
 
 	faultPlane.exit().remove();
 
+
 	/* ----------- y-Scale ----------- */
 	var yScale = svg.viz.selectAll('path.yScale').data(appData.formatted[2].y);
 	yScale.enter()
@@ -472,14 +517,40 @@ function processData(data, tt) {
 
 	yScale.exit().remove();
 
+
+	/* ----------- y-Label ----------- */
+	var middlePointY = appData.formatted[2].y[0].length / 2;
+	var yLabel = svg.viz.selectAll('text.yLabel').data(appData.formatted[2].y[0].slice(middlePointY - 1, middlePointY));
+	
+	yLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label yLabel')
+			.attr('dx', '2em')
+			.attr('text-anchor', 'end')
+			.merge(yLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+
+	yLabel.exit().remove();
+
 	/* ----------- y-Scale Text ----------- */
 	var yText = svg.viz.selectAll('text.yText').data(appData.formatted[2].y[0]);
-
 	yText.enter()
 			.append('text')
 			.attr('class', '_3d yText')
 			.attr('dx', '-1em')
 			.attr('text-anchor', 'end')
+			.style('display', function(){
+				return isRangeVisible(document.querySelector('#showRangeY')) ? 'block' : 'none';
+			})
 			.merge(yText)
 			.each(function(d){
 				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
@@ -498,8 +569,30 @@ function processData(data, tt) {
 	yText.exit().remove();
 
 
-	// Debugging scale relativity
-		// Should remove all calculations if we don't want to display
+	/* ----------- x-Label ----------- */
+	var middlePointX = appData.formatted[2].x[0].length / 2;
+	var xLabel = svg.viz.selectAll('text.xLabel').data(appData.formatted[2].x[0].slice(middlePointX - 1, middlePointX));
+	
+	xLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label xLabel')
+			.attr('dy', '-3em')
+			.attr('text-anchor', 'center')
+			.merge(xLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+
+	xLabel.exit().remove();
+
+
 	/* ----------- x-Scale Text ----------- */
 	var xText = svg.viz.selectAll('text.xText').data(appData.formatted[2].x[0]);
 
@@ -528,8 +621,32 @@ function processData(data, tt) {
 
 	xText.exit().remove();
 
-	// Debugging scale relativity
-		// Should remove all calculations if we don't want to display
+	
+	/* ----------- z-Label ----------- */
+	var middlePointZ = appData.formatted[2].z[0].length / 2;
+	var zLabel = svg.viz.selectAll('text.zLabel').data(appData.formatted[2].z[0].slice(middlePointZ - 1, middlePointZ));
+	
+	zLabel.enter()
+			.append('text')
+			.text('km')
+			.attr('class', '_3d inline-label zLabel')
+			.attr('dx', '-3%')
+			.attr('dy', '-3em')
+			.attr('text-anchor', 'end')
+			.merge(zLabel)
+			.each(function(d){
+				d.centroid = {x: d.rotated.x, y: d.rotated.y, z: d.rotated.z};
+			})
+			.attr('x', function(d){
+				return d.projected.x;
+			})
+			.attr('y', function(d){
+				return d.projected.y;
+			})
+
+	zLabel.exit().remove();
+
+
 	/* ----------- z-Scale Text ----------- */
 	var zText = svg.viz.selectAll('text.zText').data(appData.formatted[2].z[0]);
 
@@ -682,21 +799,11 @@ function dragEnd(){
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
-var magInput = document.querySelector('#magInput');
-var historyInput = document.querySelector('#historyInput');
-var eventCount = document.querySelector('#eventCount');
-var btnViewBottom = document.querySelector('#btnViewBottom');
-var btnViewFront = document.querySelector('#btnViewFront');
-var btnReplay = document.querySelector('#btnReplay');
-var toggleRanges = document.querySelectorAll('[data-range]');
-
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
-
 btnReplay.addEventListener('click', function(){
 	init();
 });
-
 
 historyInput.addEventListener('change', function(e){
 	updateHistoryRange(e.target.value);
@@ -727,7 +834,6 @@ function enableMagInput() {
 	});
 }
 
-
 toggleRanges.forEach(function(range){
 	range.addEventListener('change', function(e) {
 		handleToggleRange(e.target)
@@ -735,7 +841,7 @@ toggleRanges.forEach(function(range){
 });
 
 function handleToggleRange(target) {
-	var targetClass = '.' + target.dataset.range + 'Text';
+	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label';
 	if (isRangeVisible(target)) {
 		document.querySelectorAll(targetClass).forEach(function(el){
 			el.style.display = "block";
