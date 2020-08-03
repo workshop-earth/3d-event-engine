@@ -22,6 +22,9 @@ html {
 .cant-touch {
 	pointer-events: none;
 }
+.can-touch {
+	pointer-events: all;
+}
 
 h1 {
 	height: 1px;

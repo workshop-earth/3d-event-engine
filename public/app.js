@@ -238,7 +238,8 @@ function init() {
 					.on('end', dragEnd));
 
 	svg.viz = svg.root.append('g')
-				.attr('id', 'viz');
+				.attr('id', 'viz')
+				.attr('class', 'cant-touch');
 
 	svg.timeline = svg.root.append('g')
 			.attr('id', 'timeline')
@@ -473,7 +474,7 @@ function processData(data, tt) {
 	var points = svg.viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
-			.attr('class', '_3d quake-point')
+			.attr('class', '_3d quake-point can-touch')
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
 			.attr('r', magPoint)
