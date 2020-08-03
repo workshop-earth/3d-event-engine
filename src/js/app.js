@@ -59,7 +59,6 @@ var space = {
 var svg = {
 	root: null,
 	viz: null,
-	hit: null,
 	timeline: null,
 	playhead: null
 }
@@ -233,19 +232,13 @@ function init() {
 
 	svg.root = d3.select(vizHolder)
 				.append('svg')
+				.call(d3.drag()
+					.on('drag', dragged)
+					.on('start', dragStart)
+					.on('end', dragEnd));
 
 	svg.viz = svg.root.append('g')
 				.attr('id', 'viz');
-
-	// Apply orbit controls to an overlay for better UI with playhead controls
-	svg.hit = svg.root.append('rect')
-		.attr('x', 0)
-		.attr('y', 0)
-		.attr('class', 'viz-hit')
-		.call(d3.drag()
-			.on('drag', dragged)
-			.on('start', dragStart)
-			.on('end', dragEnd));
 
 	svg.timeline = svg.root.append('g')
 			.attr('id', 'timeline')
@@ -342,9 +335,6 @@ function sizeScale() {
 
 	svg.root.attr('height', viewport.height)
 			.attr('width', viewport.width)
-
-	svg.hit.attr('height', viewport.height)
-					.attr('width', viewport.width)
 
 	space.grid3d = d3._3d()
 		.shape('GRID', space.unit * 2)
