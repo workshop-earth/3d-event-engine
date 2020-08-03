@@ -482,7 +482,10 @@ function processData(data, tt) {
 			})
 			.merge(points)
 			.attr('cx', posPointX)
-			.attr('cy', posPointY);
+			.attr('cy', posPointY)
+			.on("click", function(d){
+				displayEventData(d);
+			});
 
 	points.exit().remove();
 
@@ -787,6 +790,10 @@ function dragged(){
 function dragEnd(){
 	orbit.mouseX = d3.event.x - orbit.mx + orbit.mouseX;
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
+}
+
+function displayEventData(data) {
+	console.log(data);
 }
 
 btnViewBottom.addEventListener('click', rBottom);
