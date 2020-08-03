@@ -42,6 +42,10 @@ p {
 	margin-top: 0.7rem;
 }
 
+small {
+	font-size: 70%;
+}
+
 .viz-holder {
 	width: 100vw;
 	height: 100vh;
@@ -49,8 +53,16 @@ p {
 
 circle {
 	&.quake-point {
+		cursor: pointer;
 		stroke-width: 1;
 		stroke: #333;
+		transition-property: stroke-width, stroke, fill;
+		transition-duration: 0.2s;
+		&.active {
+			stroke-width: 3;
+			stroke: darken($blue, 20%);
+			fill: $white;
+		}
 	}
 }
 
@@ -173,26 +185,28 @@ text {
 	left: 0;
 	span {
 		font-size: 0.75rem;
-		&.color-range {
-			display: block;
-			margin-top: 0.2rem;
-			&-circle {
-				display: inline-block;
-				border-radius: 100px;
-				height: 1rem;
-				width: 1rem;
-				position: relative;
-				top: 0.25rem;
-				border: 1px solid #333;
-				&.older {
-					background-color: $red;
-				}
-				&.middle {
-					background-color: $yellow;
-				}
-				&.newer {
-					background-color: $green;
-				}
+		display: block;
+		margin-top: 0.2rem;
+		.circle {
+			display: inline-block;
+			border-radius: 100px;
+			height: 1rem;
+			width: 1rem;
+			position: relative;
+			top: 0.25rem;
+			border: 1px solid #333;
+			&.older {
+				background-color: $red;
+			}
+			&.middle {
+				background-color: $yellow;
+			}
+			&.newer {
+				background-color: $green;
+			}
+			&.selected {
+				border: 3px solid darken($blue, 20%);
+				background-color: $white;
 			}
 		}
 	}
@@ -276,4 +290,37 @@ text {
 
 
 
+.event-data-modal {
+	box-sizing: border-box;
+	position: fixed;
+	bottom: 150px;
+	right: 1.5rem;
+	min-width: 200px;
+	border: 2px solid darken($blue, 20%);
+	border-radius: 10px;
+	background: $white;
+	padding: 1rem;
+	animation-duration: 0.75s;
+	animation-timing-function: ease-in-out;
+	&-headline {
+		font-size: 0.8rem;
+		text-align: center;
+		margin-bottom: 1rem;
+	}
+	&-table {
+		width: 100%;
+		td {
+			padding: 0.4rem 0;
+		}
+	}
+	&-value {
+		text-align: right;
+		min-width: 5em;
+	}
+}
 
+@keyframes pulseModal {
+	0%		{ box-shadow: 0 0 40px 5px rgba($yellow, 0.0) }
+	50%		{ box-shadow: 0 0 40px 5px rgba($yellow, 1) }
+	100%	{ box-shadow: 0 0 40px 5px rgba($yellow, 0.0) }
+}

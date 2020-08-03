@@ -485,7 +485,8 @@ function processData(data, tt) {
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
 			.on("click", function(d){
-				displayEventData(d);
+				// d3.select(this).attr('fill', 'red');
+				displayEventData(d, this);
 			});
 
 	points.exit().remove();
@@ -593,7 +594,6 @@ function processData(data, tt) {
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
-			.attr('dy', '-1em')
 			.attr('text-anchor', 'middle')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeX')) ? 'block' : 'none';
@@ -647,7 +647,6 @@ function processData(data, tt) {
 	zText.enter()
 			.append('text')
 			.attr('class', '_3d zText')
-			.attr('dy', '-1em')
 			.attr('text-anchor', 'end')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeZ')) ? 'block' : 'none';
@@ -793,8 +792,38 @@ function dragEnd(){
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
-function displayEventData(data) {
-	console.log(data);
+const eventDataModal = document.querySelector('#eventDataModal');
+handleEventModalAnimation();
+const eventDataTime = document.querySelector('#eventDataTime');
+const eventDataMag = document.querySelector('#eventDataMag');
+const eventDataX = document.querySelector('#eventDataX');
+const eventDataZ = document.querySelector('#eventDataZ');
+const eventDataDepth = document.querySelector('#eventDataDepth');
+
+function clearSelection(){
+	let quakePoints = document.querySelectorAll('.quake-point');
+	quakePoints.forEach(function(point){
+		point.classList.remove('active');
+	});
+}
+function handleEventModalAnimation() {
+	eventDataModal.addEventListener('animationend', () => {
+	  eventDataModal.style.animationName = "";
+	});
+}
+function pulseEventModal() {
+	eventDataModal.style.animationName = "pulseModal";
+}
+function displayEventData(data, target) {
+	clearSelection();
+	pulseEventModal();
+	target.classList.add('active');
+
+	eventDataTime.textContent = Math.round(100 * (data.time * timelineConfig.unit)) / 100;
+	eventDataMag.textContent = data.mag;
+	eventDataX.textContent = Math.round(scale2d.larger.invert(data.x) / 1000 * 10) / 10;
+	eventDataZ.textContent = Math.round(scale2d.larger.invert(data.z) / 1000 * 10) / 10;
+	eventDataDepth.textContent = -(Math.round(scale2d.depth.invert(data.y) / 1000 * 10) / 10);
 }
 
 btnViewBottom.addEventListener('click', rBottom);
