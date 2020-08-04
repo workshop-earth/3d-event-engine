@@ -326,7 +326,7 @@ function init() {
 function sizeScale() {
 	viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	viewport.scale	= Math.min(viewport.width * 0.045, 50);
+	viewport.scale	= Math.min(viewport.width * 0.04, 50);
 
 	//Little bit of magic to get best visual center
 	origin = [viewport.width/2, viewport.height/3.25];
