@@ -71,38 +71,49 @@
 	<div id="eventDataModal" class="event-data-modal">
 		<h3 class="event-data-modal-headline">Click on an event to view details</h3>
 		<table class="event-data-modal-table">
-			<tr><td>Time: <br />
-				<small>(since first event)<small></td>
-				<td class="event-data-modal-value">
-					<span id="eventDataTime">--</span> hrs
-				</td>
-			</tr>
-			<tr>
-				<td>Magnitude: </td>
-				<td class="event-data-modal-value">
-						<span id="eventDataMag">--</span>
-				</td>
-			</tr>
-			<tr>
-				<td>X: <br />
-				<small>(from primary event)<small></td>
-				<td class="event-data-modal-value">
-					<span id="eventDataX">--</span>km
-				</td>
-			</tr>
-			<tr>
-				<td>Z: <br />
-				<small>(from primary event)<small></td>
-				<td class="event-data-modal-value">
-					<span id="eventDataZ">--</span>km
-				</td>
-			</tr>
-			<tr>
-				<td>Depth: </td>
-				<td class="event-data-modal-value">
-					<span id="eventDataDepth">--</span>km
-				</td>
-			</tr>
+			<tbody>
+				<tr><td>Time*:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataTime">--</span> hrs
+					</td>
+				</tr>
+				<tr>
+					<td>Magnitude: </td>
+					<td class="event-data-modal-value">
+							<span id="eventDataMag">--</span>
+					</td>
+				</tr>
+				<tr>
+					<td>X**:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataX">--</span>km
+					</td>
+				</tr>
+				<tr>
+					<td>Z**:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataZ">--</span>km
+					</td>
+				</tr>
+				<tr>
+					<td>Depth: </td>
+					<td class="event-data-modal-value">
+						<span id="eventDataDepth">--</span>km
+					</td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						<small>*since first event</small>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<small>**distance from primary event</small>
+					</td>
+				</tr>
+			</tfoot>
 		</table>
 	</div>
 	<script src="app.js"></script>

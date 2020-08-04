@@ -309,9 +309,33 @@ text {
 	}
 	&-table {
 		width: 100%;
-		td {
-			padding: 0.4rem 0;
+		tbody {
+			td {
+				padding: 0.45rem 0;
+				vertical-align: middle;
+			}
+			tr {
+				border-bottom: 1px solid lighten($blue, 20%);
+				&:first-child {
+					td {
+						padding-top: 0;
+					}
+				}
+				&:last-child {
+					border: none;
+					td {
+						padding-bottom: 0;
+					}
+				}
+			}
 		}
+		tfoot {
+			tr:first-child {
+				td {
+					padding-top: 0.6rem;
+				}
+			}
+		}	
 	}
 	&-value {
 		text-align: right;
