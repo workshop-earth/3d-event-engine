@@ -1,6 +1,6 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var magInput = document.querySelector('#magInput');
+var magMinInput = document.querySelector('#magMinInput');
 var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
@@ -851,13 +851,13 @@ function updateEventCount(num) {
 }
 
 function enableMagInput() {
-	magInput.min = appData.magFloor;
-	magInput.max = appData.magCeil;
-	magInput.disabled = false;
-	magInput.addEventListener('change', function(e){
-		if (magInput.value < magInput.min) { magInput.value = magInput.min; }
+	magMinInput.min = appData.magFloor;
+	magMinInput.max = appData.magCeil;
+	magMinInput.disabled = false;
+	magMinInput.addEventListener('change', function(e){
+		if (magMinInput.value < magMinInput.min) { magMinInput.value = magMinInput.min; }
 		//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-		fetchQuakeData(magInput.value);
+		fetchQuakeData(magMinInput.value);
 	});
 }
 
@@ -898,7 +898,7 @@ function rFront() {
 
 //Data fetch
 	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-fetchQuakeData(magInput.value);
+fetchQuakeData(magMinInput.value);
 function fetchQuakeData(magnitude){
 	var request	= new XMLHttpRequest(),
 			datapath	= './data.json';

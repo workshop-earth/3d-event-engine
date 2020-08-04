@@ -47,8 +47,11 @@
 	</div>
 	<div class="ui">
 		<div class="ui-count"><span id="eventCount" class="event-count">0</span> events shown</div>
-		<div class="ui-input">
-			<input type="number" id="magInput" min="2.5" value="3.5" step="0.05" disabled /><label for="magInput">Min Mag</label>
+		<div class="ui-input ui-mag-grid">
+			<input class="ui-mag-input-min" type="number" id="magMinInput" min="2.5" value="3.5" step="0.05" disabled />
+			<label class="ui-mag-label-min" for="magInput">&#8592; Min Mag</label>
+			<input class="ui-mag-input-max" type="number" id="magMaxInput" min="2.5" value="3.5" step="0.05" disabled />
+			<label class="ui-mag-label-max" for="magInput">Max Mag &#x2192;</label>
 		</div>
 		<div class="ui-input">
 			<input type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)</label>

@@ -129,15 +129,21 @@ text {
 
 .ui {
 	right: 0;
+	$numberInputW: 4rem;
 	&-input {
 		input[type="number"] {
-			width: 4rem;
+			width: $numberInputW;
 			height: 2rem;
 			margin-bottom: 1rem;
 			margin-right: 0.75rem;
 			text-align: center;
 			font-size: 1rem;
 			text-indent: 0.5rem;
+
+			&[class^="ui-mag-input-"] {
+				height: auto;
+				margin: 0;
+			}
 		}
 	}
 	&-checkbox {
@@ -178,6 +184,39 @@ text {
 		text-align: center;
 		border-radius: 2rem;
 		padding: 0.3rem 1rem;
+	}
+	&-mag-grid {
+		display: grid;
+		grid-template-areas:
+				'min label1 max'
+				'min label2 max';
+		grid-template-columns: $numberInputW 1fr $numberInputW;
+		grid-row-gap: 0.2rem;
+		margin: 0.7rem 0;
+		width: 87%;
+	}
+	[class^="ui-mag-label-"] {
+		text-align: center;
+		font-size: 0.8rem;
+		$margin: 0.4rem;
+		&:first-of-type {
+			margin-top: $margin;
+		}
+		&:last-of-type {
+			margin-bottom: $margin;
+		}
+	}
+	&-mag-input-min {
+		grid-area: min;
+	}
+	&-mag-label-min {
+		grid-area: label1;
+	}
+	&-mag-input-max {
+		grid-area: max;
+	}
+	&-mag-label-max {
+		grid-area: label2;
 	}
 }
 
