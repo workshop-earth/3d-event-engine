@@ -1,6 +1,8 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
+var magInputs = document.querySelectorAll('.js-ui-mag-input');
 var magMinInput = document.querySelector('#magMinInput');
+var magMaxInput = document.querySelector('#magMaxInput');
 var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
@@ -853,11 +855,32 @@ function updateEventCount(num) {
 function enableMagInput() {
 	magMinInput.min = appData.magFloor;
 	magMinInput.max = appData.magCeil;
+	
+	magMaxInput.max = appData.magCeil;
+	if (magMaxInput.value == '') {
+		magMaxInput.value = appData.magCeil;
+	}
+
 	magMinInput.disabled = false;
-	magMinInput.addEventListener('change', function(e){
-		if (magMinInput.value < magMinInput.min) { magMinInput.value = magMinInput.min; }
-		//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-		fetchQuakeData(magMinInput.value);
+	magMaxInput.disabled = false;
+
+	let prevMax = magMaxInput.value;
+	let prevMin = magMinInput.value;
+	magInputs.forEach(function(input){
+		input.addEventListener('change', function(e){
+			if (magMinInput.value < magMinInput.min) {
+				magMinInput.value = magMinInput.min;
+			}
+			if (magMaxInput.value < magMinInput.value) {
+				alert("Maxiumum magnitude must be greater than or equal to minimum. Please adjust magnitude range.");
+				magMaxInput.value = prevMax;
+				magMinInput.value = prevMin;
+			}
+			prevMax = magMaxInput.value;
+			prevMin = magMinInput.value;
+			//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
+			fetchQuakeData(magMinInput.value, magMaxInput.value);
+		});
 	});
 }
 
@@ -898,8 +921,8 @@ function rFront() {
 
 //Data fetch
 	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-fetchQuakeData(magMinInput.value);
-function fetchQuakeData(magnitude){
+fetchQuakeData(magMinInput.value, magMaxInput.value);
+function fetchQuakeData(minMag, maxMag){
 	var request	= new XMLHttpRequest(),
 			datapath	= './data.json';
 	request.open('GET', datapath, true);
@@ -912,7 +935,13 @@ function fetchQuakeData(magnitude){
 
 			// Limit active dataset based on GUI input
 			appData.quakeRaw = appData.quakeRaw.filter(function(quake) {
-				return quake.mag >= magnitude;
+				if (maxMag != '') {
+					// If max is set, filter results between min & max
+					return quake.mag >= minMag ? quake.mag <= maxMag ? true : false : false
+				} else {
+					// Otherwise just filter based on min only
+					return quake.mag >= minMag;
+				}
 			});
 
 
