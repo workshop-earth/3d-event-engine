@@ -65,10 +65,10 @@ var svg = {
 	playhead: null
 }
 
-//**TODO: refactor min magnitude input into inputs object
-	// Treat filtering the same as history (on point plot instead of refetching every time)
 var inputs = {
-	maxHist: historyInput.value
+	maxHist: historyInput.value,
+	magMin: magMinInput,
+	magMax: magMaxInput
 }
 
 var appData = {
@@ -459,17 +459,23 @@ function processData(data, tt) {
 	grid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	// Filter data based on time/progress and active history range, controlling array over time
-	var currentData = appData.formatted[1].filter(function(quake){
+	// Filter data based on whether or not quake qualifies:
+	// 	time/progress and active history range
+	// 	min/max mag inputs
+	let currentData = appData.formatted[1].filter(function(quake){
 		if (inputs.maxHist != null) {
 			// If history has input, limit filter to a min/max
 			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timelineConfig.unit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
-				return quake.time <= scale2d.time.invert(anim.progress)
+				if (isInMagRange(quake)) {
+					return quake.time <= scale2d.time.invert(anim.progress)
+				}
 			}
 		} else {
 			// No history input, only accumulate array over time
-			return quake.time <= scale2d.time.invert(anim.progress)
+			if (isInMagRange(quake)) {
+				return quake.time <= scale2d.time.invert(anim.progress)
+			}
 		}
 	});
 	updateEventCount(currentData.length);
@@ -852,37 +858,45 @@ function updateEventCount(num) {
 	eventCount.textContent = num;
 }
 
+
+let prevMax = inputs.magMax.value;
+let prevMin = inputs.magMin.value;
 function enableMagInput() {
-	magMinInput.min = appData.magFloor;
-	magMinInput.max = appData.magCeil;
+	inputs.magMin.min = appData.magFloor;
+	inputs.magMin.max = appData.magCeil;
 	
-	magMaxInput.max = appData.magCeil;
-	if (magMaxInput.value == '') {
-		magMaxInput.value = appData.magCeil;
+	inputs.magMax.max = appData.magCeil;
+	if (inputs.magMax.value == '') {
+		inputs.magMax.value = appData.magCeil;
 	}
 
-	magMinInput.disabled = false;
-	magMaxInput.disabled = false;
+	inputs.magMin.disabled = false;
+	inputs.magMax.disabled = false;
 
-	let prevMax = magMaxInput.value;
-	let prevMin = magMinInput.value;
-	magInputs.forEach(function(input){
-		input.addEventListener('change', function(e){
-			if (magMinInput.value < magMinInput.min) {
-				magMinInput.value = magMinInput.min;
-			}
-			if (magMaxInput.value < magMinInput.value) {
-				alert("Maxiumum magnitude must be greater than or equal to minimum. Please adjust magnitude range.");
-				magMaxInput.value = prevMax;
-				magMinInput.value = prevMin;
-			}
-			prevMax = magMaxInput.value;
-			prevMin = magMinInput.value;
-			//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-			fetchQuakeData(magMinInput.value, magMaxInput.value);
-		});
-	});
+	prevMax = inputs.magMax.value;
+	prevMin = inputs.magMin.value;
 }
+
+function isInMagRange(quake) {
+	return quake.mag >= inputs.magMin.value ? quake.mag <= inputs.magMax.value ? true : false : false
+}
+
+magInputs.forEach(function(input){
+	input.addEventListener('change', function(e){
+		if (inputs.magMin.value < inputs.magMin.min) {
+			inputs.magMin.value = inputs.magMin.min;
+		}
+		if (inputs.magMax.value < inputs.magMin.value) {
+			alert("Maxiumum magnitude must be greater than or equal to minimum. Please adjust magnitude range.");
+			inputs.magMax.value = prevMax;
+			inputs.magMin.value = prevMin;
+		}
+		prevMax = inputs.magMax.value;
+		prevMin = inputs.magMin.value;
+		updateDataArray();
+		movePlayhead();
+	});
+});
 
 toggleRanges.forEach(function(range){
 	range.addEventListener('change', function(e) {
@@ -920,11 +934,10 @@ function rFront() {
 }
 
 //Data fetch
-	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-fetchQuakeData(magMinInput.value, magMaxInput.value);
-function fetchQuakeData(minMag, maxMag){
+fetchQuakeData();
+function fetchQuakeData(){
 	var request	= new XMLHttpRequest(),
-			datapath	= './data.json';
+		datapath	= './data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -932,19 +945,6 @@ function fetchQuakeData(minMag, maxMag){
 			appData.quakeRaw = JSON.parse(request.responseText).quakes;
 			// Get max/min bounds for all datapoints from full dataset
 			generateBounds();
-
-			// Limit active dataset based on GUI input
-			appData.quakeRaw = appData.quakeRaw.filter(function(quake) {
-				if (maxMag != '') {
-					// If max is set, filter results between min & max
-					return quake.mag >= minMag ? quake.mag <= maxMag ? true : false : false
-				} else {
-					// Otherwise just filter based on min only
-					return quake.mag >= minMag;
-				}
-			});
-
-
 			fetchFaultData();
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
@@ -955,7 +955,7 @@ function fetchQuakeData(minMag, maxMag){
 
 function fetchFaultData(){
 	var request	= new XMLHttpRequest(),
-			datapath	= './fault-data.json';
+		datapath	= './fault-data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -965,7 +965,6 @@ function fetchFaultData(){
 			if (appData.quakeRaw.length > 1) {
 				init();
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
-
 
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
