@@ -53,8 +53,9 @@
 			<input class="ui-mag-input-max js-ui-mag-input" type="number" id="magMaxInput" step="0.05" disabled />
 			<label class="ui-mag-label-max" for="magInput">Max Mag &#x2192;</label>
 		</div>
-		<div class="ui-input">
-			<input type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)</label>
+		<div class="ui-input ui-history-grid">
+			<input class="ui-history-input" type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)<br />
+			<small>(Enter 0 or empty for infinite time)</small></label>
 		</div>
 		<div class="ui-checkbox">
 			<input type="checkbox" id="showRangeX" data-range="x" checked /><label for="showRangeX">Show X Range</label>
@@ -75,7 +76,7 @@
 		<h3 class="event-data-modal-headline">Click on an event to view details</h3>
 		<table class="event-data-modal-table">
 			<tbody>
-				<tr><td>Time*:</td>
+				<tr><td>Time<sup>*</sup>:</td>
 					<td class="event-data-modal-value">
 						<span id="eventDataTime">--</span> hrs
 					</td>
@@ -87,13 +88,13 @@
 					</td>
 				</tr>
 				<tr>
-					<td>X**:</td>
+					<td>X<sup>**</sup>:</td>
 					<td class="event-data-modal-value">
 						<span id="eventDataX">--</span>km
 					</td>
 				</tr>
 				<tr>
-					<td>Z**:</td>
+					<td>Z<sup>**</sup>:</td>
 					<td class="event-data-modal-value">
 						<span id="eventDataZ">--</span>km
 					</td>
@@ -108,12 +109,12 @@
 			<tfoot>
 				<tr>
 					<td colspan="2">
-						<small>*since first event</small>
+						<small><sup>*</sup>since first event</small>
 					</td>
 				</tr>
 				<tr>
 					<td colspan="2">
-						<small>**distance from primary event</small>
+						<small><sup>**</sup>distance from primary event</small>
 					</td>
 				</tr>
 			</tfoot>
