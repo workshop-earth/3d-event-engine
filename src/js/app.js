@@ -905,7 +905,7 @@ toggleRanges.forEach(function(range){
 });
 
 function handleToggleRange(target) {
-	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label';
+	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label' + ', ' + '.' + target.dataset.range + 'Scale';
 	if (isRangeVisible(target)) {
 		document.querySelectorAll(targetClass).forEach(function(el){
 			el.style.display = "block";
