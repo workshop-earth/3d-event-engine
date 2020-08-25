@@ -32,23 +32,30 @@
 	</section>
 	<div id="vizHolder" class="viz-holder"></div>
 	<div class="key">
-		<span class="color-range">
+		<span>
 			older
-			<span class="color-range-circle older"></span>
+			<span class="circle older"></span>
 			&#x2192;
-			<span class="color-range-circle middle"></span>
+			<span class="circle middle"></span>
 			&#x2192;
-			<span class="color-range-circle newer"></span>
+			<span class="circle newer"></span>
 			newer
+		</span>
+		<span>
+			selected <span class="circle selected"></span>
 		</span>
 	</div>
 	<div class="ui">
 		<div class="ui-count"><span id="eventCount" class="event-count">0</span> events shown</div>
-		<div class="ui-input">
-			<input type="number" id="magInput" min="2.5" value="3.5" step="0.05" disabled /><label for="magInput">Min Mag</label>
+		<div class="ui-input ui-mag-grid">
+			<input class="ui-mag-input-min js-ui-mag-input" type="number" id="magMinInput" min="2.5" value="3.5" step="0.05" disabled />
+			<label class="ui-mag-label-min" for="magInput">&#8592; Min Mag</label>
+			<input class="ui-mag-input-max js-ui-mag-input" type="number" id="magMaxInput" step="0.05" disabled />
+			<label class="ui-mag-label-max" for="magInput">Max Mag &#x2192;</label>
 		</div>
-		<div class="ui-input">
-			<input type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)</label>
+		<div class="ui-input ui-history-grid">
+			<input class="ui-history-input" type="number" id="historyInput" min="5" step="1" value="24" /><label for="historyInput">Time window length (hrs)<br />
+			<small>(Enter 0 or empty for infinite time)</small></label>
 		</div>
 		<div class="ui-checkbox">
 			<input type="checkbox" id="showRangeX" data-range="x" checked /><label for="showRangeX">Show X Range</label>
@@ -64,6 +71,54 @@
 			<button id="btnViewBottom">View Bottom</button>
 			<button id="btnReplay">Replay</button>
 		</div>
+	</div>
+	<div id="eventDataModal" class="event-data-modal">
+		<h3 class="event-data-modal-headline">Click on an event to view details</h3>
+		<table class="event-data-modal-table">
+			<tbody>
+				<tr><td>Time<sup>*</sup>:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataTime">--</span> hrs
+					</td>
+				</tr>
+				<tr>
+					<td>Magnitude: </td>
+					<td class="event-data-modal-value">
+							<span id="eventDataMag">--</span>
+					</td>
+				</tr>
+				<tr>
+					<td>X<sup>**</sup>:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataX">--</span>km
+					</td>
+				</tr>
+				<tr>
+					<td>Z<sup>**</sup>:</td>
+					<td class="event-data-modal-value">
+						<span id="eventDataZ">--</span>km
+					</td>
+				</tr>
+				<tr>
+					<td>Depth: </td>
+					<td class="event-data-modal-value">
+						<span id="eventDataDepth">--</span>km
+					</td>
+				</tr>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						<small><sup>*</sup>since first event</small>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<small><sup>**</sup>distance from primary event</small>
+					</td>
+				</tr>
+			</tfoot>
+		</table>
 	</div>
 	<script src="app.js"></script>
 </body>

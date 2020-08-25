@@ -1,6 +1,8 @@
 // https://bl.ocks.org/Niekes/1c15016ae5b5f11508f92852057136b5
 
-var magInput = document.querySelector('#magInput');
+var magInputs = document.querySelectorAll('.js-ui-mag-input');
+var magMinInput = document.querySelector('#magMinInput');
+var magMaxInput = document.querySelector('#magMaxInput');
 var eventCount = document.querySelector('#eventCount');
 var btnViewBottom = document.querySelector('#btnViewBottom');
 var btnViewFront = document.querySelector('#btnViewFront');
@@ -59,15 +61,14 @@ var space = {
 var svg = {
 	root: null,
 	viz: null,
-	hit: null,
 	timeline: null,
 	playhead: null
 }
 
-//**TODO: refactor min magnitude input into inputs object
-	// Treat filtering the same as history (on point plot instead of refetching every time)
 var inputs = {
-	maxHist: historyInput.value
+	maxHist: historyInput,
+	magMin: magMinInput,
+	magMax: magMaxInput
 }
 
 var appData = {
@@ -233,19 +234,14 @@ function init() {
 
 	svg.root = d3.select(vizHolder)
 				.append('svg')
+				.call(d3.drag()
+					.on('drag', dragged)
+					.on('start', dragStart)
+					.on('end', dragEnd));
 
 	svg.viz = svg.root.append('g')
-				.attr('id', 'viz');
-
-	// Apply orbit controls to an overlay for better UI with playhead controls
-	svg.hit = svg.root.append('rect')
-		.attr('x', 0)
-		.attr('y', 0)
-		.attr('class', 'viz-hit')
-		.call(d3.drag()
-			.on('drag', dragged)
-			.on('start', dragStart)
-			.on('end', dragEnd));
+				.attr('id', 'viz')
+				.attr('class', 'cant-touch');
 
 	svg.timeline = svg.root.append('g')
 			.attr('id', 'timeline')
@@ -332,7 +328,7 @@ function init() {
 function sizeScale() {
 	viewport.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 	viewport.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-	viewport.scale	= Math.min(viewport.width * 0.045, 50);
+	viewport.scale	= Math.min(viewport.width * 0.04, 50);
 
 	//Little bit of magic to get best visual center
 	origin = [viewport.width/2, viewport.height/3.25];
@@ -342,9 +338,6 @@ function sizeScale() {
 
 	svg.root.attr('height', viewport.height)
 			.attr('width', viewport.width)
-
-	svg.hit.attr('height', viewport.height)
-					.attr('width', viewport.width)
 
 	space.grid3d = d3._3d()
 		.shape('GRID', space.unit * 2)
@@ -466,24 +459,30 @@ function processData(data, tt) {
 	grid.exit().remove();
 
 	/* ----------- POINTS ----------- */
-	// Filter data based on time/progress and active history range, controlling array over time
-	var currentData = appData.formatted[1].filter(function(quake){
-		if (inputs.maxHist != null) {
+	// Filter data based on whether or not quake qualifies:
+	// 	time/progress and active history range
+	// 	min/max mag inputs
+	let currentData = appData.formatted[1].filter(function(quake){
+		if (inputs.maxHist.value != null) {
 			// If history has input, limit filter to a min/max
-			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timelineConfig.unit));
+			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist.value / timelineConfig.unit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
-				return quake.time <= scale2d.time.invert(anim.progress)
+				if (isInMagRange(quake)) {
+					return quake.time <= scale2d.time.invert(anim.progress)
+				}
 			}
 		} else {
 			// No history input, only accumulate array over time
-			return quake.time <= scale2d.time.invert(anim.progress)
+			if (isInMagRange(quake)) {
+				return quake.time <= scale2d.time.invert(anim.progress)
+			}
 		}
 	});
 	updateEventCount(currentData.length);
 	var points = svg.viz.selectAll('circle').data(currentData, key);
 	points.enter()
 			.append('circle')
-			.attr('class', '_3d quake-point')
+			.attr('class', '_3d quake-point can-touch')
 			.attr('cx', posPointX)
 			.attr('cy', posPointY)
 			.attr('r', magPoint)
@@ -492,7 +491,11 @@ function processData(data, tt) {
 			})
 			.merge(points)
 			.attr('cx', posPointX)
-			.attr('cy', posPointY);
+			.attr('cy', posPointY)
+			.on("click", function(d){
+				// d3.select(this).attr('fill', 'red');
+				displayEventData(d, this);
+			});
 
 	points.exit().remove();
 
@@ -599,7 +602,6 @@ function processData(data, tt) {
 	xText.enter()
 			.append('text')
 			.attr('class', '_3d xText')
-			.attr('dy', '-1em')
 			.attr('text-anchor', 'middle')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeX')) ? 'block' : 'none';
@@ -653,7 +655,6 @@ function processData(data, tt) {
 	zText.enter()
 			.append('text')
 			.attr('class', '_3d zText')
-			.attr('dy', '-1em')
 			.attr('text-anchor', 'end')
 			.style('display', function(){
 				return isRangeVisible(document.querySelector('#showRangeZ')) ? 'block' : 'none';
@@ -729,12 +730,12 @@ function movePlayhead(){
 function moveHistory(pos, elapsed){
 	var historyScale;
 	var historyX = timelineConfig.pad;
-	if (inputs.maxHist == null || inputs.maxHist > elapsed) {
+	if (inputs.maxHist.value == null || inputs.maxHist.value > elapsed) {
 		// If history is not specified, or exceeds current playhead, scale from 0 position
 		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timelineConfig.unit)) - timelineConfig.pad;
+		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist.value / timelineConfig.unit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
 	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
@@ -799,6 +800,40 @@ function dragEnd(){
 	orbit.mouseY = d3.event.y - orbit.my + orbit.mouseY;
 }
 
+const eventDataModal = document.querySelector('#eventDataModal');
+handleEventModalAnimation();
+const eventDataTime = document.querySelector('#eventDataTime');
+const eventDataMag = document.querySelector('#eventDataMag');
+const eventDataX = document.querySelector('#eventDataX');
+const eventDataZ = document.querySelector('#eventDataZ');
+const eventDataDepth = document.querySelector('#eventDataDepth');
+
+function clearSelection(){
+	let quakePoints = document.querySelectorAll('.quake-point');
+	quakePoints.forEach(function(point){
+		point.classList.remove('active');
+	});
+}
+function handleEventModalAnimation() {
+	eventDataModal.addEventListener('animationend', () => {
+	  eventDataModal.style.animationName = "";
+	});
+}
+function pulseEventModal() {
+	eventDataModal.style.animationName = "pulseModal";
+}
+function displayEventData(data, target) {
+	clearSelection();
+	pulseEventModal();
+	target.classList.add('active');
+
+	eventDataTime.textContent = Math.round(100 * (data.time * timelineConfig.unit)) / 100;
+	eventDataMag.textContent = data.mag;
+	eventDataX.textContent = Math.round(scale2d.larger.invert(data.x) / 1000 * 10) / 10;
+	eventDataZ.textContent = Math.round(scale2d.larger.invert(data.z) / 1000 * 10) / 10;
+	eventDataDepth.textContent = -(Math.round(scale2d.depth.invert(data.y) / 1000 * 10) / 10);
+}
+
 btnViewBottom.addEventListener('click', rBottom);
 btnViewFront.addEventListener('click', rFront);
 btnReplay.addEventListener('click', function(){
@@ -811,9 +846,9 @@ historyInput.addEventListener('change', function(e){
 function updateHistoryRange(num) {
 	if (num <= 0) {
 		historyInput.value = '';
-		inputs.maxHist = null;
+		inputs.maxHist.value = null;
 	} else {
-		inputs.maxHist = num;
+		inputs.maxHist.value = num;
 	}
 	updateDataArray();
 	movePlayhead();
@@ -823,16 +858,45 @@ function updateEventCount(num) {
 	eventCount.textContent = num;
 }
 
+
+let prevMax = inputs.magMax.value;
+let prevMin = inputs.magMin.value;
 function enableMagInput() {
-	magInput.min = appData.magFloor;
-	magInput.max = appData.magCeil;
-	magInput.disabled = false;
-	magInput.addEventListener('change', function(e){
-		if (magInput.value < magInput.min) { magInput.value = magInput.min; }
-		//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-		fetchQuakeData(magInput.value);
-	});
+	inputs.magMin.min = appData.magFloor;
+	inputs.magMin.max = appData.magCeil;
+	
+	inputs.magMax.max = appData.magCeil;
+	if (inputs.magMax.value == '') {
+		inputs.magMax.value = appData.magCeil;
+	}
+
+	inputs.magMin.disabled = false;
+	inputs.magMax.disabled = false;
+
+	prevMax = inputs.magMax.value;
+	prevMin = inputs.magMin.value;
 }
+
+function isInMagRange(quake) {
+	return quake.mag >= inputs.magMin.value ? quake.mag <= inputs.magMax.value ? true : false : false
+}
+
+magInputs.forEach(function(input){
+	input.addEventListener('change', function(e){
+		if (inputs.magMin.value < inputs.magMin.min) {
+			inputs.magMin.value = inputs.magMin.min;
+		}
+		if (inputs.magMax.value < inputs.magMin.value) {
+			alert("Maxiumum magnitude must be greater than or equal to minimum. Please adjust magnitude range.");
+			inputs.magMax.value = prevMax;
+			inputs.magMin.value = prevMin;
+		}
+		prevMax = inputs.magMax.value;
+		prevMin = inputs.magMin.value;
+		updateDataArray();
+		movePlayhead();
+	});
+});
 
 toggleRanges.forEach(function(range){
 	range.addEventListener('change', function(e) {
@@ -841,7 +905,7 @@ toggleRanges.forEach(function(range){
 });
 
 function handleToggleRange(target) {
-	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label';
+	var targetClass = '.' + target.dataset.range + 'Text' + ', ' + '.' + target.dataset.range + 'Label' + ', ' + '.' + target.dataset.range + 'Scale';
 	if (isRangeVisible(target)) {
 		document.querySelectorAll(targetClass).forEach(function(el){
 			el.style.display = "block";
@@ -870,11 +934,10 @@ function rFront() {
 }
 
 //Data fetch
-	//**TODO: refactor magnitude input to filter on point plot (not refetching every time)
-fetchQuakeData(magInput.value);
-function fetchQuakeData(magnitude){
+fetchQuakeData();
+function fetchQuakeData(){
 	var request	= new XMLHttpRequest(),
-			datapath	= './data.json';
+		datapath	= './data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -882,13 +945,6 @@ function fetchQuakeData(magnitude){
 			appData.quakeRaw = JSON.parse(request.responseText).quakes;
 			// Get max/min bounds for all datapoints from full dataset
 			generateBounds();
-
-			// Limit active dataset based on GUI input
-			appData.quakeRaw = appData.quakeRaw.filter(function(quake) {
-				return quake.mag >= magnitude;
-			});
-
-
 			fetchFaultData();
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
@@ -899,7 +955,7 @@ function fetchQuakeData(magnitude){
 
 function fetchFaultData(){
 	var request	= new XMLHttpRequest(),
-			datapath	= './fault-data.json';
+		datapath	= './fault-data.json';
 	request.open('GET', datapath, true);
 	request.onload = function() {
 		if (request.status >= 200 && request.status < 400) {
@@ -909,7 +965,6 @@ function fetchFaultData(){
 			if (appData.quakeRaw.length > 1) {
 				init();
 			} else { alert("Only one or fewer earthquake events found. This visualization requires at least two events. Please lower minimum magnitude"); }
-
 
 		} else { console.log('Reached our target server, but it returned an error'); }
 	};
