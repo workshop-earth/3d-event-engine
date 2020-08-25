@@ -66,7 +66,7 @@ var svg = {
 }
 
 var inputs = {
-	maxHist: historyInput.value,
+	maxHist: historyInput,
 	magMin: magMinInput,
 	magMax: magMaxInput
 }
@@ -463,9 +463,9 @@ function processData(data, tt) {
 	// 	time/progress and active history range
 	// 	min/max mag inputs
 	let currentData = appData.formatted[1].filter(function(quake){
-		if (inputs.maxHist != null) {
+		if (inputs.maxHist.value != null) {
 			// If history has input, limit filter to a min/max
-			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist / timelineConfig.unit));
+			var historyPoint = (scale2d.time.invert(anim.progress) - (inputs.maxHist.value / timelineConfig.unit));
 			if (quake.time <= scale2d.time.invert(anim.progress) && quake.time >= historyPoint) {
 				if (isInMagRange(quake)) {
 					return quake.time <= scale2d.time.invert(anim.progress)
@@ -730,12 +730,12 @@ function movePlayhead(){
 function moveHistory(pos, elapsed){
 	var historyScale;
 	var historyX = timelineConfig.pad;
-	if (inputs.maxHist == null || inputs.maxHist > elapsed) {
+	if (inputs.maxHist.value == null || inputs.maxHist.value > elapsed) {
 		// If history is not specified, or exceeds current playhead, scale from 0 position
 		historyScale = scale2d.scrub.invert(anim.progress) - timelineConfig.pad;
 	} else {
 		// Scale history UI accordingly and move position with playhead
-		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist / timelineConfig.unit)) - timelineConfig.pad;
+		historyScale = scale2d.scrub.invert(scale2d.time(inputs.maxHist.value / timelineConfig.unit)) - timelineConfig.pad;
 		historyX = pos - historyScale;
 	}
 	timelineConfig.hist.attr('transform', 'translate(' + historyX + ') scale(' + historyScale + ', 1)')
@@ -846,9 +846,9 @@ historyInput.addEventListener('change', function(e){
 function updateHistoryRange(num) {
 	if (num <= 0) {
 		historyInput.value = '';
-		inputs.maxHist = null;
+		inputs.maxHist.value = null;
 	} else {
-		inputs.maxHist = num;
+		inputs.maxHist.value = num;
 	}
 	updateDataArray();
 	movePlayhead();
